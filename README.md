@@ -5,11 +5,15 @@ XMR-Stak is a universal Stratum pool miner. This is the CPU-mining version; ther
 ## HTML reports
 <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-hashrate.png" width="260"> <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-results.png" width="260"> <img src="https://gist.githubusercontent.com/fireice-uk/2da301131ac01695ff79539a27b81d68/raw/4c09cdeee86f94df2e9dd86b927e64aded6184f5/xmr-stak-cpu-connection.png" width="260">
 
+## HTML and JSON API report configuraton
+
+To configure the reports shown above you need to edit the httpd_port variable. Then enable wifi on your phone and navigate to [miner ip address]:[httpd_port] in your phone browser. If you want to use the data in scripts, you can get the JSON version of the data at url [miner ip address]:[httpd_port]/api.json
+
 ## Usage on Windows 
 1) Edit the config.txt file to enter your pool login and password. 
 2) Double click the exe file. 
 
-XMR-Stak should compile on any C++11 compliant compiler. Windows compiler is assumed to be MSVC 2015 CE. MSVC build environment is not vendored.
+XMR-Stak should compile on any C++11 compliant compiler.
 ```
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA256
@@ -17,66 +21,35 @@ Hash: SHA256
 sha1sum
 d34a0ba0dd7b3b1f900a7e02772e197e974b4a73  libeay32.dll
 2ee9966a0fc163da58408d91be36b84fa287c10b  ssleay32.dll
-a03f81d7445005e0d51e3825e67cac8413df1068  xmr-stak-cpu.exe
-98bb62cd1f3c7a11a18d6c2b1f1bd6bf4b5b41a3  xmr-stak-cpu-notls.exe
-
+e4d8a974e58985214de163df0c1ed0f54250d7ee  xmr-stak-cpu.exe
+ae0153ff98df82022b2c392d6a17c5f3614f6a50  xmr-stak-cpu-notls.exe
 
 sha3sum
 05003137a87313c81d6c348c9b96411c95d48dc22c35f36c39129747  libeay32.dll
 133c065d9ef2c93396382e2ba5d8c3ca8c6a57c6beb0159cb9a4b6c5  ssleay32.dll
-9666ae2cfa337599282615275ea05f4e6240fd571c86530583ac89aa  xmr-stak-cpu.exe
-46f633b125907feed2f16fc97dcc8402a67218809fef226a77c0aa70  xmr-stak-cpu-notls.exe
+7bfc30b06524dc9139a3157e2661d2a6f5720738dde8e490f05cc8e2  xmr-stak-cpu.exe
+005fb81fc3711a97b2ce65bad0ca97318d878dc793a8cba99c7d1f6f  xmr-stak-cpu-notls.exe
 
 date
-Sat 29 Apr 16:59:00 BST 2017
+Wed 19 Jul 21:18:58 BST 2017
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQEcBAEBCAAGBQJZBLhQAAoJEPsk95p+1Bw0bWYH/0jtGhKqahRGaxAnLLmA9rsK
-HUsvIDkAFEshdcUK2yB32JXu4vltG2sbIb/AaY3qifFawhfMPQXGPhJ1YfWlJrI6
-icqcPlvHRo88nSfpCfRA3EOjmrNSM4uXb4/FM9ongTgqBKPkSAoQjJfnhXQfOFKb
-ULyN0xRRMuqPxnAggzqn5mwcJ1qPFnuUDjcBssnHw21P/p72qrMK/pMp1LeGMpGZ
-+kzr7rS2wko7isJuMouddCK3rypxeIry2XfLehRqguhfXLw9Xi+HNmBCY+76bYWi
-xXl2Nm/u3cPP/eQVrZz5H8eACwIv+LL1EV+9uLanWUa+IO5hHr3KElvKNKD6vN0=
-=vGQV
+iQEcBAEBCAAGBQJZb77XAAoJEPsk95p+1Bw0GU4H/26sBwJzYSeWoLwo0LdmOPk3
+19n+svFYnz6NlxAjs+fvuTK992ilLMy2pa4PHKhot2oyZIgt2rRaFsvRADcHVraG
+nsIh4Oq31T9epZI0WxIH5FJlDx30fdGkpMTu9xt6ta2JXsmkDiCoZxmETuljB7Rw
+xvnKeHiuTccp73C6Nd7dkuiemsOw0FZA7XXS/Kmwqm7n8BtCztY70R6SVN7QFbCz
+C49s0A9cT4UbAUPuu8KvxFozmJHA/wDBYHgkq95Y6n/q116+Sc9BpdF8j+qK4YzZ
+uM+B10XY0g7Qv376UoJRYKokpVaBxF08nD+JXLdL+zfQvnEfKgrhTnjaTkWFfEY=
+=jpgE
 -----END PGP SIGNATURE-----
 ```
-## Compile for Windows
+## Compile guides
 
-- see [WINCOMPILE.md](WINCOMPILE.md)
+- [Free BSD](FREEBSDCOMPILE.md)
+- [Linux](LINUXCOMPILE.md)
+- [Windows](WINCOMPILE.md)
 
-## Compile on Linux 
-
-### GNU Compiler
-```
-    # Ubuntu / Debian
-    sudo apt-get install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
-    cmake .
-
-    # Fedora
-    sudo dnf install gcc gcc-c++ hwloc-devel libmicrohttpd-devel openssl-devel cmake
-    cmake .
-
-    # CentOS
-    sudo yum install centos-release-scl cmake3 hwloc-devel libmicrohttpd-devel openssl-devel
-    sudo yum install devtoolset-4-gcc*
-    sudo scl enable devtoolset-4 bash
-    cmake3 .
-
-    make install
-```
-
-- GCC version 5.1 or higher is required for full C++11 support. CMake release compile scripts, as well as CodeBlocks build environment for debug builds is included.
-
-### To do a static build for a system without gcc 5.1+
-```
-    cmake -DCMAKE_LINK_STATIC=ON .
-    make install
-```
-Note - cmake caches variables, so if you want to do a dynamic build later you need to specify '-DCMAKE_LINK_STATIC=OFF'
-
-
-You can find a complete compile guide under [Advanced Compile Options](#advanced-compile-options).
 
 #### CPU mining performance 
 
@@ -130,7 +103,7 @@ If that happens, disable all auto-staring applications and run the miner after a
 
 **msvcp140.dll and vcruntime140.dll not available errors**
 
-Download and install this [runtime package](https://www.microsoft.com/en-us/download/details.aspx?id=48145) from Microsoft.  *Warning: Do NOT use "missing dll" sites - dll's are exe files with another name, and it is a fairly safe bet that any dll on a shady site like that will be trojaned.  Please download offical runtimes from Microsoft above.*
+Download and install this [runtime package](https://go.microsoft.com/fwlink/?LinkId=746572) from Microsoft.  *Warning: Do NOT use "missing dll" sites - dll's are exe files with another name, and it is a fairly safe bet that any dll on a shady site like that will be trojaned.  Please download offical runtimes from Microsoft above.*
 
 
 **Error: MEMORY ALLOC FAILED: mmap failed**
@@ -138,7 +111,7 @@ Download and install this [runtime package](https://www.microsoft.com/en-us/down
 From [config.txt](config.txt):
 
 On Linux you will need to configure large page support `sudo sysctl -w vm.nr_hugepages=128` and increase your
-ulimit -l. To do do this you need to add following lines to /etc/security/limits.conf:
+ulimit -l. To do this you need to add following lines to /etc/security/limits.conf:
 
     * soft memlock 262144
     * hard memlock 262144

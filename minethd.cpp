@@ -150,7 +150,7 @@ void telemetry::push_perf_value(size_t iThd, uint64_t iHashCount, uint64_t iTime
 	iBucketTop[iThd] = (iTop + 1) & iBucketMask;
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, int affinity)
+minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -161,6 +161,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	bNoPrefetch = no_prefetch;
 	this->affinity = affinity;
 
+	std::lock_guard<std::mutex> lock(work_thd_mtx);
 	if(double_work)
 		oWorkThd = std::thread(&minethd::double_work_main, this);
 	else
@@ -307,15 +308,6 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 		jconf::inst()->GetThreadConfig(i, cfg);
 
 		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.iCpuAff);
-
-		if(cfg.iCpuAff >= 0)
-		{
-#if defined(__APPLE__)
-			printer::inst()->print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
-#endif
-			thd_setaffinity(thd->oWorkThd.native_handle(), cfg.iCpuAff);
-		}
-
 		pvThreads->push_back(thd);
 
 		if(cfg.iCpuAff >= 0)
@@ -370,10 +362,24 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch)
 	return func_table[digit.to_ulong()];
 }
 
-void minethd::work_main()
+void minethd::pin_thd_affinity()
 {
+	//Lock is needed because we need to use oWorkThd
+	std::lock_guard<std::mutex> lock(work_thd_mtx);
+
 	// pin memory to NUMA node
 	bindMemoryToNUMANode(affinity);
+
+#if defined(__APPLE__)
+	printer::inst()->print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
+#endif
+	thd_setaffinity(oWorkThd.native_handle(), affinity);
+}
+
+void minethd::work_main()
+{
+	if(affinity >= 0) //-1 means no affinity
+		pin_thd_affinity();
 
 	cn_hash_fun hash_fun;
 	cryptonight_ctx* ctx;
@@ -460,10 +466,17 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefe
 	return func_table[digit.to_ulong()];
 }
 
+uint32_t* minethd::prep_double_work(uint8_t bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2])
+{
+	memcpy(bDoubleWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
+	memcpy(bDoubleWorkBlob + oWork.iWorkSize, oWork.bWorkBlob, oWork.iWorkSize);
+	return (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 39);
+}
+
 void minethd::double_work_main()
 {
-	// pin memory to NUMA node
-	bindMemoryToNUMANode(affinity);
+	if(affinity >= 0) //-1 means no affinity
+		pin_thd_affinity();
 
 	cn_hash_fun_dbl hash_fun;
 	cryptonight_ctx* ctx0;
@@ -472,7 +485,7 @@ void minethd::double_work_main()
 	uint64_t *piHashVal0, *piHashVal1;
 	uint32_t *piNonce0, *piNonce1;
 	uint8_t bDoubleHashOut[64];
-	uint8_t	bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2];
+	uint8_t bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2];
 	uint32_t iNonce;
 	job_result res;
 
@@ -483,7 +496,11 @@ void minethd::double_work_main()
 	piHashVal0 = (uint64_t*)(bDoubleHashOut + 24);
 	piHashVal1 = (uint64_t*)(bDoubleHashOut + 32 + 24);
 	piNonce0 = (uint32_t*)(bDoubleWorkBlob + 39);
-	piNonce1 = nullptr;
+
+	if(!oWork.bStall)
+		piNonce1 = prep_double_work(bDoubleWorkBlob);
+	else
+		piNonce1 = nullptr;
 
 	iConsumeCnt++;
 
@@ -499,9 +516,7 @@ void minethd::double_work_main()
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 			consume_work();
-			memcpy(bDoubleWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
-			memcpy(bDoubleWorkBlob + oWork.iWorkSize, oWork.bWorkBlob, oWork.iWorkSize);
-			piNonce1 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 39);
+			piNonce1 = prep_double_work(bDoubleWorkBlob);
 			continue;
 		}
 
@@ -539,9 +554,7 @@ void minethd::double_work_main()
 		}
 
 		consume_work();
-		memcpy(bDoubleWorkBlob, oWork.bWorkBlob, oWork.iWorkSize);
-		memcpy(bDoubleWorkBlob + oWork.iWorkSize, oWork.bWorkBlob, oWork.iWorkSize);
-		piNonce1 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 39);
+		piNonce1 = prep_double_work(bDoubleWorkBlob);
 	}
 
 	cryptonight_free_ctx(ctx0);

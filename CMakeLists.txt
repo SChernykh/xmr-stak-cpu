@@ -24,7 +24,7 @@ list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
 # a high rate of wrong shares.
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
-        message(FATAL_ERROR "GCC version must be at least 5.1!")
+        message(FATAL_ERROR "g++ version must be at least 5.1!")
     endif()
 endif()
 
@@ -50,6 +50,18 @@ set(LIBS ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 option(MICROHTTPD_ENABLE "Enable or disable the requirement of microhttp (http deamon)" ON)
 if(MICROHTTPD_ENABLE)
+    find_path(MTHD_INCLUDE_DIR
+        NAMES
+            microhttpd.h
+        PATHS
+            /opt/local
+            /usr/local
+            /usr
+            ENV "PROGRAMFILES(X86)"
+            ENV "MICROHTTPD_ROOT"
+        PATH_SUFFIXES
+            include)
+
     find_library(MHTD
         NAMES
             microhttpd
@@ -62,6 +74,7 @@ if(MICROHTTPD_ENABLE)
         message(FATAL_ERROR "microhttpd NOT found: use `-DMICROHTTPD_ENABLE=OFF` to build without http deamon support")
     else()
         set(LIBS ${LIBS} ${MHTD})
+        include_directories(AFTER ${MTHD_INCLUDE_DIR})
     endif()
 else()
     add_definitions("-DCONF_NO_HTTPD")
@@ -134,8 +147,10 @@ endif()
 ################################################################################
 
 # activate sse2 and aes-ni
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
+endif()
 
 # activate static libgcc and libstdc++ linking
 if(CMAKE_LINK_STATIC)

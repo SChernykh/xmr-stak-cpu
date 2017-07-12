@@ -1,6 +1,7 @@
 #pragma once
 #include <thread>
 #include <atomic>
+#include <mutex>
 #include "crypto/cryptonight.h"
 
 class telemetry
@@ -97,13 +98,11 @@ public:
 	std::atomic<uint64_t> iHashCount;
 	std::atomic<uint64_t> iTimestamp;
 
-	int affinity;
-
 private:
 	typedef void (*cn_hash_fun)(const void*, size_t, void*, cryptonight_ctx*);
 	typedef void (*cn_hash_fun_dbl)(const void*, size_t, void*, cryptonight_ctx* __restrict, cryptonight_ctx* __restrict);
 
-	minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, int affinity);
+	minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, int64_t affinity);
 
 	// We use the top 10 bits of the nonce for thread and resume
 	// This allows us to resume up to 128 threads 4 times before
@@ -122,6 +121,7 @@ private:
 	void work_main();
 	void double_work_main();
 	void consume_work();
+	uint32_t* prep_double_work(uint8_t bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2]);
 
 	static std::atomic<uint64_t> iGlobalJobNo;
 	static std::atomic<uint64_t> iConsumeCnt;
@@ -131,8 +131,13 @@ private:
 	static miner_work oGlobalWork;
 	miner_work oWork;
 
+	void pin_thd_affinity();
+	// Held by the creating context to prevent a race cond with oWorkThd = std::thread(...)
+	std::mutex work_thd_mtx;
+
 	std::thread oWorkThd;
 	uint8_t iThreadNo;
+	int64_t affinity;
 
 	bool bQuit;
 	bool bNoPrefetch;
