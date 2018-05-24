@@ -22,8 +22,15 @@
  *      { "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 1 },
  * ],
  */
-"cpu_threads_conf" : 
-null,
+"cpu_threads_conf" :
+[ 
+	{ "low_power_mode" : false, "no_prefetch" : true, "affine_to_cpu" : 0 },
+],
+
+/*
+ * Set it to true to test Cryptonight shuffle modification: https://github.com/monero-project/monero/issues/3545#issuecomment-380117524
+ */
+"test_shuffle" : false,
 
 /*
  * LARGE PAGE SUPPORT
@@ -106,7 +113,7 @@ null,
  *
  * We feature pools up to 1MH/s. For a more complete list see M5M400's pool list at www.moneropools.com
  */
-"pool_address" : "pool.usxmrpool.com:3333",
+"pool_address" : "0.0.0.0:3333",
 "wallet_address" : "",
 "pool_password" : "",
 

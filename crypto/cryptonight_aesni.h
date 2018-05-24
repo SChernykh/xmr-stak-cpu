@@ -288,7 +288,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH>
+template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
@@ -304,41 +304,60 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	__m128i bx0 = _mm_set_epi64x(h0[3] ^ h0[7], h0[2] ^ h0[6]);
 
 	uint64_t idx0 = h0[0] ^ h0[4];
+	uint32_t idx1 = idx0 & 0x1FFFF0;
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
 	{
 		__m128i cx;
-		cx = _mm_load_si128((__m128i *)&l0[idx0 & 0x1FFFF0]);
+		cx = _mm_load_si128((__m128i *)&l0[idx1]);
 
 		if(SOFT_AES)
 			cx = soft_aesenc(cx, _mm_set_epi64x(ah0, al0));
 		else
 			cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
 
-		_mm_store_si128((__m128i *)&l0[idx0 & 0x1FFFF0], _mm_xor_si128(bx0, cx));
+		// Shuffle the other 3x16 byte chunks in 64-byte cache line
+		if (SHUFFLE)
+		{
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]), _MM_SHUFFLE(2, 0, 3, 1)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]), _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]), _MM_SHUFFLE(3, 1, 2, 0)));
+		}
+
+		_mm_store_si128((__m128i *)&l0[idx1], _mm_xor_si128(bx0, cx));
 		idx0 = _mm_cvtsi128_si64(cx);
+		idx1 = idx0 & 0x1FFFF0;
 		bx0 = cx;
 
 		if(PREFETCH)
-			_mm_prefetch((const char*)&l0[idx0 & 0x1FFFF0], _MM_HINT_T0);
+			_mm_prefetch((const char*)&l0[idx1], _MM_HINT_T0);
 
 		uint64_t hi, lo, cl, ch;
-		cl = ((uint64_t*)&l0[idx0 & 0x1FFFF0])[0];
-		ch = ((uint64_t*)&l0[idx0 & 0x1FFFF0])[1];
+		cl = ((uint64_t*)&l0[idx1])[0];
+		ch = ((uint64_t*)&l0[idx1])[1];
 
 		lo = _umul128(idx0, cl, &hi);
 
+		// Shuffle the other 3x16 byte chunks in 64-byte cache line
+		if (SHUFFLE)
+		{
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]), _MM_SHUFFLE(2, 0, 3, 1)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]), _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]), _MM_SHUFFLE(3, 1, 2, 0)));
+		}
+
 		al0 += hi;
 		ah0 += lo;
-		((uint64_t*)&l0[idx0 & 0x1FFFF0])[0] = al0;
-		((uint64_t*)&l0[idx0 & 0x1FFFF0])[1] = ah0;
+		((uint64_t*)&l0[idx1])[0] = al0;
+		((uint64_t*)&l0[idx1])[1] = ah0;
 		ah0 ^= ch;
 		al0 ^= cl;
 		idx0 = al0;
+		idx1 = idx0 & 0x1FFFF0;
 
 		if(PREFETCH)
-			_mm_prefetch((const char*)&l0[idx0 & 0x1FFFF0], _MM_HINT_T0);
+			_mm_prefetch((const char*)&l0[idx1], _MM_HINT_T0);
 	}
 
 	// Optim - 90% time boundary

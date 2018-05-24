@@ -45,7 +45,7 @@ using namespace rapidjson;
 /*
  * This enum needs to match index in oConfigValues, otherwise we will get a runtime error
  */
-enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, bAesOverride,
+enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, bTestShuffle, bAesOverride,
 	bTlsMode, bTlsSecureAlgo, sTlsFingerprint, sPoolAddr, sWalletAddr, sPoolPwd,
 	iCallTimeout, iNetRetry, iGiveUpLimit, iVerboseLevel, iAutohashTime,
 	bDaemonMode, sOutputFile, iHttpdPort, bPreferIpv4 };
@@ -62,6 +62,7 @@ configVal oConfigValues[] = {
 	{ aCpuThreadsConf, "cpu_threads_conf", kNullType },
 	{ sUseSlowMem, "use_slow_memory", kStringType },
 	{ bNiceHashMode, "nicehash_nonce", kTrueType },
+	{ bTestShuffle, "test_shuffle", kTrueType },
 	{ bAesOverride, "aes_override", kNullType },
 	{ bTlsMode, "use_tls", kTrueType },
 	{ bTlsSecureAlgo, "tls_secure_algo", kTrueType },
@@ -145,6 +146,7 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 
 	cfg.bDoubleMode = mode->GetBool();
 	cfg.bNoPrefetch = no_prefetch->GetBool();
+	cfg.bShuffle = prv->configValues[bTestShuffle]->GetBool();
 
 	if(aff->IsNumber())
 		cfg.iCpuAff = aff->GetInt64();

@@ -150,7 +150,7 @@ void telemetry::push_perf_value(size_t iThd, uint64_t iHashCount, uint64_t iTime
 	iBucketTop[iThd] = (iTop + 1) & iBucketMask;
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, int64_t affinity)
+minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -159,6 +159,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	iHashCount = 0;
 	iTimestamp = 0;
 	bNoPrefetch = no_prefetch;
+	bShuffle = shuffle;
 	this->affinity = affinity;
 
 	if(double_work)
@@ -256,6 +257,8 @@ bool minethd::self_test()
 		return false;
 	}
 
+	return true;
+/*
 	unsigned char out[64];
 	bool bResult;
 
@@ -288,6 +291,7 @@ bool minethd::self_test()
 		    "Cryptonight hash self-test failed. This might be caused by bad compiler optimizations.");
 
 	return bResult;
+*/
 }
 
 std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
@@ -306,7 +310,7 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 	{
 		jconf::inst()->GetThreadConfig(i, cfg);
 
-		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.iCpuAff);
+		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.iCpuAff);
 		pvThreads->push_back(thd);
 
 		if(cfg.iCpuAff >= 0)
@@ -340,23 +344,31 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch)
+minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
-	// Digit order SOFT_AES, NO_PREFETCH
+	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE
 
-	static const cn_hash_fun func_table[4] = {
-		cryptonight_hash<0x80000, MEMORY, false, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true>
+	static const cn_hash_fun func_table[8] = {
+		// Original cryptonight with shuffle
+		cryptonight_hash<0x80000, MEMORY, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true>,
+
+		// Original cryptonight
+		cryptonight_hash<0x80000, MEMORY, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false>
 	};
 
-	std::bitset<2> digit;
+	std::bitset<3> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
+	digit.set(2, !bShuffle);
 
 	return func_table[digit.to_ulong()];
 }
@@ -384,7 +396,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 
-	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch);
+	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle);
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(result.bResult + 24);
