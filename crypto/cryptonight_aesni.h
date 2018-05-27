@@ -320,9 +320,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		// Shuffle the other 3x16 byte chunks in 64-byte cache line
 		if (SHUFFLE)
 		{
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]), _MM_SHUFFLE(2, 0, 3, 1)));
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]), _MM_SHUFFLE(0, 3, 1, 2)));
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]), _MM_SHUFFLE(3, 1, 2, 0)));
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]);
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]);
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]);
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(chunk3, _MM_SHUFFLE(2, 0, 3, 1)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(chunk1, _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(chunk2, _MM_SHUFFLE(3, 1, 2, 0)));
 		}
 
 		_mm_store_si128((__m128i *)&l0[idx1], _mm_xor_si128(bx0, cx));
@@ -342,9 +345,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		// Shuffle the other 3x16 byte chunks in 64-byte cache line
 		if (SHUFFLE)
 		{
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]), _MM_SHUFFLE(2, 0, 3, 1)));
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]), _MM_SHUFFLE(0, 3, 1, 2)));
-			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]), _MM_SHUFFLE(3, 1, 2, 0)));
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]);
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]);
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]);
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_shuffle_epi32(chunk3, _MM_SHUFFLE(2, 0, 3, 1)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_shuffle_epi32(chunk1, _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shuffle_epi32(chunk2, _MM_SHUFFLE(3, 1, 2, 0)));
 		}
 
 		al0 += hi;
