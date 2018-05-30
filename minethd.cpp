@@ -382,7 +382,7 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, boo
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
 	digit.set(2, !bShuffle);
-	digit.set(2, !bDivision);
+	digit.set(3, !bDivision);
 
 	return func_table[digit.to_ulong()];
 }
