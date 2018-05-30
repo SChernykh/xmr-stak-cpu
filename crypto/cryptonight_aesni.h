@@ -288,7 +288,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE>
+template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool DIVISION>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
@@ -305,6 +305,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 	uint64_t idx0 = h0[0] ^ h0[4];
 	uint32_t idx1 = idx0 & 0x1FFFF0;
+
+	uint32_t modulo = 0;
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
@@ -339,6 +341,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		uint64_t hi, lo, cl, ch;
 		cl = ((uint64_t*)&l0[idx1])[0];
 		ch = ((uint64_t*)&l0[idx1])[1];
+
+		if (DIVISION)
+		{
+			ch ^= modulo;
+			modulo = ch % static_cast<uint32_t>(cl | 0x10001);
+		}
 
 		lo = _umul128(idx0, cl, &hi);
 

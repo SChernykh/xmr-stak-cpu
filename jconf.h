@@ -17,6 +17,7 @@ public:
 		bool bDoubleMode;
 		bool bNoPrefetch;
 		bool bShuffle;
+		bool bDivision;
 		long long iCpuAff;
 	};
 
