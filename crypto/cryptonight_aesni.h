@@ -306,7 +306,14 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	uint64_t idx0 = h0[0] ^ h0[4];
 	uint32_t idx1 = idx0 & 0x1FFFF0;
 
-	uint32_t modulo = 0;
+	struct
+	{
+		uint32_t q;
+		uint32_t r;
+	} division_result;
+	static_assert(sizeof(division_result) == sizeof(uint64_t), "Two uint32_t's in a struct don't add up to a single uint64_t. Check your compiler flags.");
+
+	*((uint64_t*)&division_result) = 0;
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
@@ -344,8 +351,19 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		if (DIVISION)
 		{
-			ch ^= modulo;
-			modulo = ch % static_cast<uint32_t>(cl | 0x10001);
+			// Use division result from the _previous_ iteration to hide division latency
+			ch ^= *((uint64_t*)&division_result);
+
+			// Most and least significant bits in the divisor are set to 1
+			// to make sure we don't divide by a small or even number,
+			// so there are no shortcuts for such cases
+			//
+			// Quotient may be as large as (2^64 - 1)/(2^31 + 1) = 8589934588 = 2^33 - 4
+			// We drop the highest bit to fit both quotient and remainder in 32 bits
+
+			// Compiler will optimize it to a single div instruction
+			division_result.q = static_cast<uint32_t>(ch / static_cast<uint32_t>(cl | 0x80000001UL));
+			division_result.r = static_cast<uint32_t>(ch % static_cast<uint32_t>(cl | 0x80000001UL));
 		}
 
 		lo = _umul128(idx0, cl, &hi);
