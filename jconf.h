@@ -18,6 +18,7 @@ public:
 		bool bNoPrefetch;
 		bool bShuffle;
 		bool bDivision;
+		bool bShuffleWithLag;
 		long long iCpuAff;
 	};
 

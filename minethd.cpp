@@ -150,7 +150,7 @@ void telemetry::push_perf_value(size_t iThd, uint64_t iHashCount, uint64_t iTime
 	iBucketTop[iThd] = (iTop + 1) & iBucketMask;
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, bool division, int64_t affinity)
+minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, bool division, bool shuffle_with_lag, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -161,6 +161,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	bNoPrefetch = no_prefetch;
 	bShuffle = shuffle;
 	bDivision = division;
+	bShuffleWithLag = shuffle_with_lag;
 	this->affinity = affinity;
 
 	if(double_work)
@@ -311,7 +312,7 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 	{
 		jconf::inst()->GetThreadConfig(i, cfg);
 
-		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.bDivision, cfg.iCpuAff);
+		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.bDivision, cfg.bShuffleWithLag, cfg.iCpuAff);
 		pvThreads->push_back(thd);
 
 		if(cfg.iCpuAff >= 0)
@@ -345,44 +346,69 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bDivision)
+minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bDivision, bool bShuffleWithLag)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE
 
-	static const cn_hash_fun func_table[16] = {
+	static const cn_hash_fun func_table[32] = {
+		// Original cryptonight with shuffle and division and shuffle-with-lag
+		cryptonight_hash<0x80000, MEMORY, false, false, true, true, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, true, true>,
+
+		// Original cryptonight with division and shuffle-with-lag
+		cryptonight_hash<0x80000, MEMORY, false, false, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, true, true>,
+
+		// Original cryptonight with shuffle and shuffle-with-lag
+		cryptonight_hash<0x80000, MEMORY, false, false, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, false, true>,
+
+		// Original cryptonight with shuffle-with-lag
+		cryptonight_hash<0x80000, MEMORY, false, false, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, false, true>,
+
 		// Original cryptonight with shuffle and division
-		cryptonight_hash<0x80000, MEMORY, false, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, true>,
+		cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, true, false>,
 
 		// Original cryptonight with division
-		cryptonight_hash<0x80000, MEMORY, false, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, false, false, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, true, false>,
 
 		// Original cryptonight with shuffle
-		cryptonight_hash<0x80000, MEMORY, false, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, false, false>,
 
 		// Original cryptonight
-		cryptonight_hash<0x80000, MEMORY, false, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, false, false>,
 	};
 
-	std::bitset<4> digit;
+	std::bitset<5> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
 	digit.set(2, !bShuffle);
 	digit.set(3, !bDivision);
+	digit.set(4, !bShuffleWithLag);
 
 	return func_table[digit.to_ulong()];
 }
@@ -410,7 +436,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 
-	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bDivision);
+	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bDivision, bShuffleWithLag);
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(result.bResult + 24);

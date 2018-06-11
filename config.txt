@@ -38,6 +38,11 @@
 "test_division" : false,
 
 /*
+ * Set it to true to test Cryptonight lagged shuffle modification
+ */
+"test_shuffle_with_lag" : false,
+
+/*
  * LARGE PAGE SUPPORT
  * Lare pages need a properly set up OS. It can be difficult if you are not used to systems administation,
  * but the performace results are worth the trouble - you will get around 20% boost. Slow memory mode is

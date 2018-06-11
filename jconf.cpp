@@ -45,7 +45,7 @@ using namespace rapidjson;
 /*
  * This enum needs to match index in oConfigValues, otherwise we will get a runtime error
  */
-enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, bTestShuffle, bTestDivision, bAesOverride,
+enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, bTestShuffle, bTestDivision, bShuffleWithLag, bAesOverride,
 	bTlsMode, bTlsSecureAlgo, sTlsFingerprint, sPoolAddr, sWalletAddr, sPoolPwd,
 	iCallTimeout, iNetRetry, iGiveUpLimit, iVerboseLevel, iAutohashTime,
 	bDaemonMode, sOutputFile, iHttpdPort, bPreferIpv4 };
@@ -64,6 +64,7 @@ configVal oConfigValues[] = {
 	{ bNiceHashMode, "nicehash_nonce", kTrueType },
 	{ bTestShuffle, "test_shuffle", kTrueType },
 	{ bTestDivision, "test_division", kTrueType },
+	{ bShuffleWithLag, "test_shuffle_with_lag", kTrueType },
 	{ bAesOverride, "aes_override", kNullType },
 	{ bTlsMode, "use_tls", kTrueType },
 	{ bTlsSecureAlgo, "tls_secure_algo", kTrueType },
@@ -149,6 +150,7 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 	cfg.bNoPrefetch = no_prefetch->GetBool();
 	cfg.bShuffle = prv->configValues[bTestShuffle]->GetBool();
 	cfg.bDivision = prv->configValues[bTestDivision]->GetBool();
+	cfg.bShuffleWithLag = prv->configValues[bShuffleWithLag]->GetBool();
 
 	if(aff->IsNumber())
 		cfg.iCpuAff = aff->GetInt64();

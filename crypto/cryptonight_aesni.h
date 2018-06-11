@@ -288,7 +288,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool DIVISION>
+template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool DIVISION, bool SHUFFLE_WITH_LAG>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
@@ -306,6 +306,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	uint64_t idx0 = h0[0] ^ h0[4];
 	uint32_t idx1 = idx0 & 0x1FFFF0;
 
+	// 2 MB scratchpad = 32768 cache lines, uint16_t will be enough for indexing
+	// History size is up to 256 lines = 16 KB which is 50% of a typical L1 cache size on modern CPUs
+	static_assert(MEM / 64 <= 65536, "Scratchpad size is too big to use uint16 for cacheline_history");
+	enum { CACHELINE_HISTORY_SIZE = 256 };
+	uint16_t cacheline_history[CACHELINE_HISTORY_SIZE] = {};
+
 	struct
 	{
 		uint32_t q;
@@ -318,6 +324,13 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
 	{
+		uint32_t shuffle_with_lag_idx;
+		if (SHUFFLE_WITH_LAG)
+		{
+			shuffle_with_lag_idx = static_cast<uint32_t>(cacheline_history[idx0 % CACHELINE_HISTORY_SIZE]) << 6;
+			cacheline_history[(i * 2) % CACHELINE_HISTORY_SIZE] = static_cast<uint16_t>(idx1 >> 6);
+		}
+
 		__m128i cx;
 		cx = _mm_load_si128((__m128i *)&l0[idx1]);
 
@@ -326,7 +339,24 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		else
 			cx = _mm_aesenc_si128(cx, _mm_set_epi64x(ah0, al0));
 
-		// Shuffle the other 3x16 byte chunks in 64-byte cache line
+		// Shuffle one of the previous 256 cache lines (64x256 = 16 KB of data) that are still in L1 cache
+		// The lag is random because it depends on idx0
+		if (SHUFFLE_WITH_LAG)
+		{
+			// Shuffle constants here were chosen carefully
+			// to maximize permutation cycle length
+			// and have no 2-byte elements stay in their places
+			const __m128i chunk0 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x00]);
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x10]);
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x20]);
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x30]);
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x00], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk2, _MM_SHUFFLE(2, 0, 3, 1)), _MM_SHUFFLE(3, 1, 2, 0)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x10], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk0, _MM_SHUFFLE(0, 3, 1, 2)), _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x20], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk3, _MM_SHUFFLE(2, 1, 0, 3)), _MM_SHUFFLE(2, 1, 0, 3)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x30], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk1, _MM_SHUFFLE(3, 1, 0, 2)), _MM_SHUFFLE(0, 2, 3, 1)));
+		}
+
+		// Shuffle the other 3x16 byte chunks in the current 64-byte cache line
 		if (SHUFFLE)
 		{
 			// Shuffle constants here were chosen carefully
@@ -344,6 +374,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		idx0 = _mm_cvtsi128_si64(cx);
 		idx1 = idx0 & 0x1FFFF0;
 		bx0 = cx;
+
+		if (SHUFFLE_WITH_LAG)
+		{
+			shuffle_with_lag_idx = static_cast<uint32_t>(cacheline_history[idx0 % CACHELINE_HISTORY_SIZE]) << 6;
+			cacheline_history[(i * 2 + 1) % CACHELINE_HISTORY_SIZE] = static_cast<uint16_t>(idx1 >> 6);
+		}
 
 		if(PREFETCH)
 			_mm_prefetch((const char*)&l0[idx1], _MM_HINT_T0);
@@ -371,7 +407,24 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		lo = _umul128(idx0, cl, &hi);
 
-		// Shuffle the other 3x16 byte chunks in 64-byte cache line
+		// Shuffle one of the previous 256 cache lines (64x256 = 16 KB of data) that are still in L1 cache
+		// The lag is random because it depends on idx0
+		if (SHUFFLE_WITH_LAG)
+		{
+			// Shuffle constants here were chosen carefully
+			// to maximize permutation cycle length
+			// and have no 2-byte elements stay in their places
+			const __m128i chunk0 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x00]);
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x10]);
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x20]);
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x30]);
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x00], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk2, _MM_SHUFFLE(2, 0, 3, 1)), _MM_SHUFFLE(3, 1, 2, 0)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x10], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk0, _MM_SHUFFLE(0, 3, 1, 2)), _MM_SHUFFLE(0, 3, 1, 2)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x20], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk3, _MM_SHUFFLE(2, 1, 0, 3)), _MM_SHUFFLE(2, 1, 0, 3)));
+			_mm_store_si128((__m128i *)&l0[shuffle_with_lag_idx + 0x30], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk1, _MM_SHUFFLE(3, 1, 0, 2)), _MM_SHUFFLE(0, 2, 3, 1)));
+		}
+
+		// Shuffle the other 3x16 byte chunks in the current 64-byte cache line
 		if (SHUFFLE)
 		{
 			// Shuffle constants here were chosen carefully
