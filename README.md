@@ -16,7 +16,9 @@ It has the following nice properties:
 - every element is moved from the original position to a new one
 - the cycle length of this permutation is 45, so it doesn't degenerate to the starting permutation quickly even if applied repeatedly
 
-The shuffle modification makes Cryptonight 4 times more demanding for memory bandwidth, making ASIC/FPGA 4 times slower. At the same time, CPU/GPU performance stays almost the same because this bandwidth is already there, it's just not used yet. Shuffle can also be done in parallel with existing Cryptonight calculations. My tests on CPU showed only 2.5% slowdown.
+The shuffle modification makes Cryptonight 4 times more demanding for memory bandwidth, making ASIC/FPGA 4 times slower\*. At the same time, CPU/GPU performance stays almost the same because this bandwidth is already there, it's just not used yet. Shuffle can also be done in parallel with existing Cryptonight calculations. My tests on CPU showed only 2.5% slowdown.
+
+\* The 4 times slowdown applies only to devices (ASIC/FPGA) that use external memory for storing the scratchpad and saturate this memory's bandwidth. Devices that use on-chip memory have no problems with bandwidth, but they'll still have to do 4 times more memory reads/writes, so they'll also become somewhat slower.
 
 ### 2. Division modification
 
