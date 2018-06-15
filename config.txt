@@ -33,9 +33,9 @@
 "test_shuffle" : false,
 
 /*
- * Set it to true to test Cryptonight division modification
+ * Set it to true to test Cryptonight integer math modification: it adds one 64:32 bit integer division and two 52 bit integer square roots per iteration
  */
-"test_division" : false,
+"test_int_math" : false,
 
 /*
  * Set it to true to test Cryptonight lagged shuffle modification

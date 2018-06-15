@@ -288,7 +288,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool DIVISION, bool SHUFFLE_WITH_LAG>
+template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool INT_MATH, bool SHUFFLE_WITH_LAG>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
@@ -320,6 +320,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	static_assert(sizeof(division_result) == sizeof(uint64_t), "Two uint32_t's in a struct don't add up to a single uint64_t. Check your compiler flags.");
 
 	*((uint64_t*)&division_result) = 0;
+	uint32_t sqrt_results[2] = {};
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
@@ -388,10 +389,22 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		cl = ((uint64_t*)&l0[idx1])[0];
 		ch = ((uint64_t*)&l0[idx1])[1];
 
-		if (DIVISION)
+		if (INT_MATH)
 		{
 			// Use division result from the _previous_ iteration to hide division latency
-			ch ^= *((uint64_t*)&division_result);
+			ch ^= *((uint64_t*)&division_result) ^ *((uint64_t*)sqrt_results);
+
+			// Calculate 2 integer square roots
+			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
+			// if the underlying hardware follows IEEE-754
+			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
+			__m128d x1 = _mm_setzero_pd();
+			__m128d x2 = _mm_setzero_pd();
+			x1 = _mm_cvtsi64_sd(x1, cl >> 12);
+			x2 = _mm_cvtsi64_sd(x2, ch >> 12);
+			x1 = _mm_sqrt_pd(_mm_shuffle_pd(x1, x2, _MM_SHUFFLE2(0, 0)));
+			sqrt_results[0] = static_cast<uint32_t>(_mm_cvttsd_si64(x1));
+			sqrt_results[1] = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_shuffle_pd(x1, x1, _MM_SHUFFLE2(0, 1))));
 
 			// Most and least significant bits in the divisor are set to 1
 			// to make sure we don't divide by a small or even number,
