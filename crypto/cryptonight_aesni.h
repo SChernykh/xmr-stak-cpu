@@ -397,11 +397,12 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			// Calculate 2 integer square roots
 			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
 			// if the underlying hardware follows IEEE-754
-			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
+			// This is why we do bit shift: (2^64 >> 16) < 2^52 + 2^27 - 1
+			// Shift right 16 bits to have 48-bit square root due to GPU efficiency restrictions
 			__m128d x1 = _mm_setzero_pd();
 			__m128d x2 = _mm_setzero_pd();
-			x1 = _mm_cvtsi64_sd(x1, cl >> 12);
-			x2 = _mm_cvtsi64_sd(x2, ch >> 12);
+			x1 = _mm_cvtsi64_sd(x1, cl >> 16);
+			x2 = _mm_cvtsi64_sd(x2, ch >> 16);
 			x1 = _mm_sqrt_pd(_mm_shuffle_pd(x1, x2, _MM_SHUFFLE2(0, 0)));
 			sqrt_results[0] = static_cast<uint32_t>(_mm_cvttsd_si64(x1));
 			sqrt_results[1] = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_shuffle_pd(x1, x1, _MM_SHUFFLE2(0, 1))));
