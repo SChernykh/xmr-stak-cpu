@@ -33,8 +33,8 @@ Current maximum lag is 256 cache lines (16 KB of previously accessed data), but 
 
 ### 3. Integer math modification
 
-It adds one 64:32 bit integer division and two 52 bit integer square roots per iteration.
+It adds one 64:32 bit integer division and two 48 bit integer square roots per iteration.
 
-Adding integer division and integer square roots to the main loop ramps up the complexity of ASIC/FPGA and silicon area needed to implement it, so they'll be much less efficient with the same transistor budget and/or power consumption. Most common hardware implementations of division and square roots require a lot of clock cycles of latency (at least 16 cycles for division and at least 26 cycles for 52 bit square root). Even though this latency can be hidden in pipelined implementations, it will require A LOT of logical elements/silicon area to implement.
+Adding integer division and integer square roots to the main loop ramps up the complexity of ASIC/FPGA and silicon area needed to implement it, so they'll be much less efficient with the same transistor budget and/or power consumption. Most common hardware implementations of division and square roots require a lot of clock cycles of latency (at least 16 cycles for division and at least 24 cycles for 48 bit square root). Even though this latency can be hidden in pipelined implementations, it will require A LOT of logical elements/silicon area to implement.
 
 Good news for CPU and GPU is that division and square roots can be added to the main loop in such a way that their latency is completely hidden, so again there is almost no slowdown. My tests on CPU showed 3% slowdown with division and no additional slowdown at all when division is added together with shuffle modification.
