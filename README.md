@@ -57,17 +57,30 @@ shuffle_with_lag\* | 69.1 H/s|97.2%
 
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
 
+### The numbers below are for stock cards, neither tuned nor overclocked. XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
+
 Radeon RX 560 on Windows 10: all stock, monitor plugged in, intensity 1000, worksize 32:
-**old numbers with unoptimized shuffle code, will be updated soon**
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 379.9 H/s|100.0%
-INT_MATH | 383.1 H/s|~100.0%
-SHUFFLE | 371.6 H/s|97.8%
-Both mods | 350.9 H/s|92.4%
+\- | 326.6 H/s|100.0%
+INT_MATH | 326.2 H/s|99.9%
+SHUFFLE | 324.4 H/s|99.3%
+Both mods | 318.5 H/s|97.5%
+
+Radeon RX 560 on Windows 10: core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 293.9 H/s|100.0%
+INT_MATH | 247.9 H/s|84.3%
+SHUFFLE | 251.7 H/s|85.6%
+Both mods | 204.6 H/s|69.6%
+
+**It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
 
 GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
+**old numbers, will be retested tomorrow with the latest code**
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
