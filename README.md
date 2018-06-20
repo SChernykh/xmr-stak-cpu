@@ -55,6 +55,8 @@ shuffle_with_lag\* | 69.1 H/s|97.2%
 
 \*shuffle_with_lag is not implemented for GPU yet
 
+GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
+
 Radeon RX 560 on Windows 10: all stock, monitor plugged in, intensity 1000, worksize 32:
 **old numbers with unoptimized shuffle code, will be updated soon**
 
