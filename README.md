@@ -38,3 +38,38 @@ It adds one 64:32 bit integer division and two 48 bit integer square roots per i
 Adding integer division and integer square roots to the main loop ramps up the complexity of ASIC/FPGA and silicon area needed to implement it, so they'll be much less efficient with the same transistor budget and/or power consumption. Most common hardware implementations of division and square roots require a lot of clock cycles of latency (at least 16 cycles for division and at least 24 cycles for 48 bit square root). Even though this latency can be hidden in pipelined implementations, it will require A LOT of logical elements/silicon area to implement.
 
 Good news for CPU and GPU is that division and square roots can be added to the main loop in such a way that their latency is completely hidden, so again there is almost no slowdown. My tests on CPU showed 3% slowdown with division and no additional slowdown at all when division is added together with shuffle modification.
+
+# Performance
+
+As you can see from this data, CPUs and GPUs get less than 8% slower. On the other side, ASIC/FPGA which use external memory for scratchpad get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad will also get a few times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
+
+AMD Ryzen (1 thread):
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 71.1 H/s|100.0%
+INT_MATH | 70.0 H/s|98.5%
+SHUFFLE | 69.3 H/s|97.5%
+Both mods | 67.0 H/s|94.2%
+shuffle_with_lag\* | 69.1 H/s|97.2%
+
+\*shuffle_with_lag is not implemented for GPU yet
+
+Radeon RX 560 on Windows 10: all stock, monitor plugged in, intensity 1000, worksize 32:
+**old numbers with unoptimized shuffle code, will be updated soon**
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 379.9 H/s|100.0%
+INT_MATH | 383.1 H/s|~100.0%
+SHUFFLE | 371.6 H/s|97.8%
+Both mods | 350.9 H/s|92.4%
+
+GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|474.2 H/s|100.0%
+INT_MATH|462.5 H/s|97.5%
+SHUFFLE|443.2 H/s|93.5%
+Both|437.9 H/s|92.3%
