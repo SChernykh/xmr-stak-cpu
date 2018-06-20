@@ -63,6 +63,16 @@ SHUFFLE | 145.6 H/s|99.3%
 Both mods | 136.2 H/s|92.9%
 shuffle_with_lag\* | 144.4 H/s|98.5%
 
+Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 71.6 H/s|100.0%
+INT_MATH | 69 H/s|96.4%
+SHUFFLE | 70.6 H/s|98.6%
+Both mods | 63.7 H/s|89.0%
+shuffle_with_lag\* | 71.0 H/s|99.2%
+
 \*shuffle_with_lag is not implemented for GPU yet
 
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
