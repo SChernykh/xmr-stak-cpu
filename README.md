@@ -73,6 +73,16 @@ SHUFFLE | 70.6 H/s|98.6%
 Both mods | 63.7 H/s|89.0%
 shuffle_with_lag\* | 71.0 H/s|99.2%
 
+Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz), 1 thread
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 68.2 H/s|100.0%
+INT_MATH | 66.2 H/s|97.1%
+SHUFFLE | 67.3 H/s|98.7%
+Both mods | 63.5 H/s|93.1%
+shuffle_with_lag\* | 67.3 H/s|98.7%
+
 \*shuffle_with_lag is not implemented for GPU yet
 
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
