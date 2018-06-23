@@ -93,19 +93,19 @@ Radeon RX 560 on Windows 10: all stock, monitor plugged in, intensity 1000, work
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 326.6 H/s|100.0%
-INT_MATH | 326.2 H/s|99.9%
-SHUFFLE | 324.4 H/s|99.3%
-Both mods | 318.5 H/s|97.5%
+\- | 327.3 H/s|100.0%
+INT_MATH | 326.9 H/s|99.9%
+SHUFFLE | 325.5 H/s|99.45%
+Both mods | 321.1 H/s|98.1%
 
 Radeon RX 560 on Windows 10: core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 303.7 H/s|100.0%
-INT_MATH | 251.1 H/s|82.7%
-SHUFFLE | 258.5 H/s|85.1%
-Both mods | 211.8 H/s|69.7%
+\- | 303.8 H/s|100.0%
+INT_MATH | 261.9 H/s|86.2%
+SHUFFLE | 260.9 H/s|85.9%
+Both mods | 214.5 H/s|70.6%
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
 
