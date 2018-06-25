@@ -111,10 +111,9 @@ Both mods | 214.5 H/s|70.6%
 
 GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
 
-
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\-|452.2 H/s|100.0%
-INT_MATH|448.3 H/s|99.1%
-SHUFFLE|420.3 H/s|92.9%
-Both mods|420.1 H/s|92.9%
+\-|452.3 H/s|100.0%
+INT_MATH|448.8 H/s|99.2%
+SHUFFLE|420.6 H/s|93.0%
+Both mods|420.6 H/s|93.0%
