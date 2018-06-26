@@ -67,129 +67,15 @@ void do_benchmark();
 
 int main(int argc, char *argv[])
 {
-#ifndef CONF_NO_TLS
-	SSL_library_init();
-	SSL_load_error_strings();
-	ERR_load_BIO_strings();
-	ERR_load_crypto_strings();
-	SSL_load_error_strings();
-	OpenSSL_add_all_digests();
-#endif
-
-	srand(time(0));
-
-	const char* sFilename = "config.txt";
-	bool benchmark_mode = false;
-
-	if(argc >= 2)
-	{
-		if(strcmp(argv[1], "-h") == 0)
-		{
-			printer::inst()->print_msg(L0, "Usage %s [CONFIG FILE]", argv[0]);
-			win_exit();
-			return 0;
-		}
-
-		if(argc >= 3 && strcasecmp(argv[1], "-c") == 0)
-		{
-			sFilename = argv[2];
-		}
-		else if(argc >= 3 && strcasecmp(argv[1], "benchmark_mode") == 0)
-		{
-			sFilename = argv[2];
-			benchmark_mode = true;
-		}
-		else
-			sFilename = argv[1];
-	}
-
-	if(!jconf::inst()->parse_config(sFilename))
+	if(!jconf::inst()->parse_config("config.txt"))
 	{
 		win_exit();
 		return 0;
 	}
 
-	if(jconf::inst()->NeedsAutoconf())
-	{
-		autoAdjust adjust;
-		adjust.printConfig();
-		win_exit();
-		return 0;
-	}
-
-	if (!minethd::self_test())
-	{
-		win_exit();
-		return 0;
-	}
-
-	if(benchmark_mode)
-	{
-		do_benchmark();
-		win_exit();
-		return 0;
-	}
-
-#ifndef CONF_NO_HTTPD
-	if(jconf::inst()->GetHttpdPort() != 0)
-	{
-		if (!httpd::inst()->start_daemon())
-		{
-			win_exit();
-			return 0;
-		}
-	}
-#endif
-
-	printer::inst()->print_str("-------------------------------------------------------------------\n");
-	printer::inst()->print_str( XMR_STAK_NAME" " XMR_STAK_VERSION " mining software, CPU Version.\n");
-	printer::inst()->print_str("Based on CPU mining code by wolf9466 (heavily optimized by fireice_uk).\n");
-	printer::inst()->print_str("Brought to you by fireice_uk and psychocrypt under GPLv3.\n\n");
-	char buffer[64];
-	snprintf(buffer, sizeof(buffer), "Configurable dev donation level is set to %.1f %%\n\n", fDevDonationLevel * 100.0);
-	printer::inst()->print_str(buffer);
-	printer::inst()->print_str("You can use following keys to display reports:\n");
-	printer::inst()->print_str("'h' - hashrate\n");
-	printer::inst()->print_str("'r' - results\n");
-	printer::inst()->print_str("'c' - connection\n");
-	printer::inst()->print_str("-------------------------------------------------------------------\n");
-
-	if(strlen(jconf::inst()->GetOutputFile()) != 0)
-		printer::inst()->open_logfile(jconf::inst()->GetOutputFile());
-
-	executor::inst()->ex_start(jconf::inst()->DaemonMode());
-
-	using namespace std::chrono;
-	uint64_t lastTime = time_point_cast<milliseconds>(high_resolution_clock::now()).time_since_epoch().count();
-
-	int key;
-	while(true)
-	{
-		key = get_key();
-
-		switch(key)
-		{
-		case 'h':
-			executor::inst()->push_event(ex_event(EV_USR_HASHRATE));
-			break;
-		case 'r':
-			executor::inst()->push_event(ex_event(EV_USR_RESULTS));
-			break;
-		case 'c':
-			executor::inst()->push_event(ex_event(EV_USR_CONNSTAT));
-			break;
-		default:
-			break;
-		}
-
-		uint64_t currentTime = time_point_cast<milliseconds>(high_resolution_clock::now()).time_since_epoch().count();
-
-		/* Hard guard to make sure we never get called more than twice per second */
-		if( currentTime - lastTime < 500)
-			std::this_thread::sleep_for(std::chrono::milliseconds(500 - (currentTime - lastTime)));
-		lastTime = currentTime;
-	}
-
+	minethd::self_test();
+	do_benchmark();
+	win_exit();
 	return 0;
 }
 
