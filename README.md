@@ -87,7 +87,7 @@ shuffle_with_lag\* | 67.3 H/s|98.7%
 
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
 
-### The numbers below are for stock cards, neither tuned nor overclocked. XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
+### The numbers below are for stock cards, not tuned. XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
 
 Radeon RX 560 on Windows 10 (all stock): monitor plugged in, intensity 1000, worksize 32:
 
