@@ -89,7 +89,7 @@ GPU performance was tested using the code from this repository: https://github.c
 
 ### The numbers below are for stock cards, neither tuned nor overclocked. XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
 
-Radeon RX 560 on Windows 10: all stock, monitor plugged in, intensity 1000, worksize 32:
+Radeon RX 560 on Windows 10 (all stock): monitor plugged in, intensity 1000, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -98,7 +98,16 @@ INT_MATH | 326.8 H/s|99.9%
 SHUFFLE | 325.7 H/s|99.5%
 Both mods | 325.2 H/s|99.4%
 
-Radeon RX 560 on Windows 10: core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
+Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2275 MHz, monitor plugged in, intensity 1000, worksize 32:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 407.2 H/s|100.0%
+INT_MATH | 406.5 H/s|99.8%
+SHUFFLE | 389.0 H/s|95.5%
+Both mods | 386.3 H/s|94.9%
+
+Radeon RX 560 on Windows 10 (underclocked): core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
