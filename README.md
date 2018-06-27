@@ -87,80 +87,24 @@ shuffle_with_lag\* | 67.3 H/s|98.7%
 
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
 
-### The numbers below are for stock cards, not tuned. XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
-
-Radeon RX 560 on Windows 10 (all stock): monitor plugged in, intensity 1000, worksize 32:
-
-Mod|Hashrate|Performance level
----|--------|-----------------
-\- | 327.2 H/s|100.0%
-INT_MATH | 326.8 H/s|99.9%
-SHUFFLE | 325.7 H/s|99.5%
-Both mods | 325.2 H/s|99.4%
-
-Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2275 MHz, monitor plugged in, intensity 1000, worksize 32:
-
-Mod|Hashrate|Performance level
----|--------|-----------------
-\- | 407.2 H/s|100.0%
-INT_MATH | 406.5 H/s|99.8%
-SHUFFLE | 389.0 H/s|95.5%
-Both mods | 386.3 H/s|94.9%
+### XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
 
 Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2150 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 447.4 H/s|100.0%
-INT_MATH | 438.0 H/s|97.9%
-SHUFFLE | 440.6 H/s|98.5%
-Both mods | 434.9 H/s|97.2%
+\- | 466.7 H/s|100.0%
+INT_MATH | 438.3 H/s|93.9%
+SHUFFLE | 452.4 H/s|96.9%
+Both mods | 439.1 H/s|94.1%
 
-Radeon RX 560 on Windows 10 (underclocked): core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
+Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2150 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 303.7 H/s|100.0%
-INT_MATH | 261.7 H/s|86.2%
-SHUFFLE | 298.7 H/s|98.4%
-Both mods | 234.2 H/s|77.1%
+\- | 394.3 H/s|100.0%
+INT_MATH | 281.6 H/s|71.4%
+SHUFFLE | 355.9 H/s|90.3%
+Both mods | 257.4 H/s|65.3%
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
-
-GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
-
-Mod|Hashrate|Performance level
----|--------|-----------------
-\-|452.3 H/s|100.0%
-INT_MATH|448.8 H/s|99.2%
-SHUFFLE|420.6 H/s|93.0%
-Both mods|420.6 H/s|93.0%
-
-### Results from MoneroCrusher
-
-Gigabyte RX 550 2 GB, 8 CU, 2 Threads (432/432), 1220/2150, 1 Click PBE Timing Straps, Ubuntu 16.04
-
-Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
--- | -- | -- | -- | --
-No Mod | 467 H/s | 440 H/s | Crash | 100.0%
-SHUFFLE | 409 H/s | 453 H/s | Crash | 97.0%
-INT_MATH | 223 H/s | 302 H/s | 360 H/s | 77.1%
-Both mods | 202 H/s | 267 H/s | 316 H/s | 67.7%
-
-Sapphire RX 550 2 GB, 10 CU, 2 Threads (432/432), 1220/2150, 1 Click PBE Timing Straps, Ubuntu 16.04
-
-Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
--- | -- | -- | -- | --
-No Mod | 528 H/s | 479 H/s | 470 H/s | 100.0%
-SHUFFLE | 419 H/s | 458 H/s | 419 H/s | 86.7%
-INT_MATH | 229 H/s | 354 H/s | 353 H/s | 67.0%
-Both mods | 217 H/s | 309 H/s | 315 H/s | 59.7%
-
-Vega RX 56, 56 CU, 2 Threads (2016/1716), 950/1417, Windows 10
-
-Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
--- | -- | -- | -- | --
-No Mod | 1650 H/s | 1632 H/s | 1613 H/s | 100.0%
-SHUFFLE | 1588 H/s | 1639 H/s | 1591 H/s | 99.3%
-INT_MATH | 1052 H/s | 1411 H/s | 1471 H/s | 89.2%
-Both mods | 1026 H/s | 1321 H/s | 1303 H/s | 80.1%
