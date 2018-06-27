@@ -126,3 +126,32 @@ Mod|Hashrate|Performance level
 INT_MATH|448.8 H/s|99.2%
 SHUFFLE|420.6 H/s|93.0%
 Both mods|420.6 H/s|93.0%
+
+### Results from MoneroCrusher
+
+Gigabyte RX 550 2 GB, 8 CU, 2 Threads (432/432), 1220/2150, 1 Click PBE Timing Straps, Ubuntu 16.04
+
+Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
+-- | -- | -- | -- | --
+No Mod | 467 H/s | 440 H/s | Crash | 100.0%
+SHUFFLE | 409 H/s | 453 H/s | Crash | 97.0%
+INT_MATH | 223 H/s | 302 H/s | 360 H/s | 77.1%
+Both mods | 202 H/s | 267 H/s | 316 H/s | 67.7%
+
+Sapphire RX 550 2 GB, 10 CU, 2 Threads (432/432), 1220/2150, 1 Click PBE Timing Straps, Ubuntu 16.04
+
+Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
+-- | -- | -- | -- | --
+No Mod | 528 H/s | 479 H/s | 470 H/s | 100.0%
+SHUFFLE | 419 H/s | 458 H/s | 419 H/s | 86.7%
+INT_MATH | 229 H/s | 354 H/s | 353 H/s | 67.0%
+Both mods | 217 H/s | 309 H/s | 315 H/s | 59.7%
+
+Vega RX 56, 56 CU, 2 Threads (2016/1716), 950/1417, Windows 10
+
+Mod | Hashrate (WS 8) | Hashrate (WS 16) | Hashrate (WS 32) | Performance level
+-- | -- | -- | -- | --
+No Mod | 1650 H/s | 1632 H/s | 1613 H/s | 100.0%
+SHUFFLE | 1588 H/s | 1639 H/s | 1591 H/s | 99.3%
+INT_MATH | 1052 H/s | 1411 H/s | 1471 H/s | 89.2%
+Both mods | 1026 H/s | 1321 H/s | 1303 H/s | 80.1%
