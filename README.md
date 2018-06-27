@@ -107,6 +107,15 @@ INT_MATH | 406.5 H/s|99.8%
 SHUFFLE | 389.0 H/s|95.5%
 Both mods | 386.3 H/s|94.9%
 
+Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1000, worksize 32:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 448.5 H/s|100.0%
+INT_MATH | 447.3 H/s|99.7%
+SHUFFLE | 446.8 H/s|99.6%
+Both mods | 439.3 H/s|97.9%
+
 Radeon RX 560 on Windows 10 (underclocked): core @ 595 MHz to simulate RX 550, monitor plugged in, intensity 1000, worksize 32:
 
 Mod|Hashrate|Performance level
