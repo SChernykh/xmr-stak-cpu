@@ -320,7 +320,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	static_assert(sizeof(division_result) == sizeof(uint64_t), "Two uint32_t's in a struct don't add up to a single uint64_t. Check your compiler flags.");
 
 	*((uint64_t*)&division_result) = 0;
-	uint32_t sqrt_results[2] = {};
+	uint32_t sqrt_result = 0;
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
@@ -392,20 +392,15 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		if (INT_MATH)
 		{
 			// Use division result from the _previous_ iteration to hide division latency
-			ch ^= *((uint64_t*)&division_result) ^ *((uint64_t*)sqrt_results);
+			ch ^= *((uint64_t*)&division_result) ^ sqrt_result;
 
-			// Calculate 2 integer square roots
+			// Calculate integer square root
 			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
 			// if the underlying hardware follows IEEE-754
 			// This is why we do bit shift: (2^64 >> 16) < 2^52 + 2^27 - 1
 			// Shift right 16 bits to have 48-bit square root due to GPU efficiency restrictions
-			__m128d x1 = _mm_setzero_pd();
-			__m128d x2 = _mm_setzero_pd();
-			x1 = _mm_cvtsi64_sd(x1, cl >> 16);
-			x2 = _mm_cvtsi64_sd(x2, ch >> 16);
-			x1 = _mm_sqrt_pd(_mm_shuffle_pd(x1, x2, _MM_SHUFFLE2(0, 0)));
-			sqrt_results[0] = static_cast<uint32_t>(_mm_cvttsd_si64(x1));
-			sqrt_results[1] = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_shuffle_pd(x1, x1, _MM_SHUFFLE2(0, 1))));
+			const __m128d z = _mm_setzero_pd();
+			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, cl >> 16))));
 
 			// Most and least significant bits in the divisor are set to 1
 			// to make sure we don't divide by a small or even number,
