@@ -41,7 +41,7 @@ Good news for CPU and GPU is that division and square roots can be added to the 
 
 # Performance
 
-As you can see from this data, CPUs and GPUs get less than 8% slower. On the other side, ASIC/FPGA which use external memory for scratchpad get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad will also get a few times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
+As you can see from this data, most modern CPUs and GPUs get minimal slowdown. Older CPUs and low-end GPUs get noticeably slower. On the other side, ASIC/FPGA which use external memory for scratchpad get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
 
 AMD Ryzen (1 thread):
 
