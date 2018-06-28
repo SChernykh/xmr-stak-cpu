@@ -108,3 +108,12 @@ SHUFFLE | 355.9 H/s|90.3%
 Both mods | 257.4 H/s|65.3%
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
+
+GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|453.6 H/s|100.0%
+INT_MATH|450.7 H/s|99.4%
+SHUFFLE|421.2 H/s|92.9%
+Both mods|420.9 H/s|92.8%
