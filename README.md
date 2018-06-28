@@ -57,31 +57,31 @@ Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz), 2 threads
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 146.6 H/s|100.0%
-INT_MATH | 142.7 H/s|97.3%
-SHUFFLE | 145.6 H/s|99.3%
-Both mods | 136.2 H/s|92.9%
-shuffle_with_lag\* | 144.4 H/s|98.5%
+\- | 146.5 H/s|100.0%
+INT_MATH | 144.2 H/s|98.4%
+SHUFFLE | 145.5 H/s|99.3%
+Both mods | 141.6 H/s|96.7%
+shuffle_with_lag\* | 143.9 H/s|98.2%
 
 Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 71.6 H/s|100.0%
-INT_MATH | 69 H/s|96.4%
-SHUFFLE | 70.6 H/s|98.6%
-Both mods | 63.7 H/s|89.0%
-shuffle_with_lag\* | 71.0 H/s|99.2%
+\- | 72.5 H/s|100.0%
+INT_MATH | 69.4 H/s|95.7%
+SHUFFLE | 70.5 H/s|97.2%
+Both mods | 66.5 H/s|91.7%
+shuffle_with_lag\* | 70.9 H/s|97.8%
 
 Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz), 1 thread
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 68.2 H/s|100.0%
-INT_MATH | 66.2 H/s|97.1%
-SHUFFLE | 67.3 H/s|98.7%
-Both mods | 63.5 H/s|93.1%
-shuffle_with_lag\* | 67.3 H/s|98.7%
+\- | 66.9 H/s|100.0%
+INT_MATH | 65.3 H/s|97.6%
+SHUFFLE | 65.7 H/s|98.2%
+Both mods | 64.6 H/s|96.6%
+shuffle_with_lag\* | 65.6 H/s|98.1%
 
 \*shuffle_with_lag is not implemented for GPU yet
 
