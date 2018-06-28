@@ -60,7 +60,7 @@ Mod|Hashrate|Performance level
 \- | 146.5 H/s|100.0%
 INT_MATH | 144.2 H/s|98.4%
 SHUFFLE | 145.5 H/s|99.3%
-Both mods | 141.6 H/s|96.7%
+Both mods | 142.8 H/s|97.5%
 shuffle_with_lag\* | 143.9 H/s|98.2%
 
 Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
@@ -68,9 +68,9 @@ Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 72.5 H/s|100.0%
-INT_MATH | 69.4 H/s|95.7%
+INT_MATH | 61.7 H/s|85.1%
 SHUFFLE | 70.5 H/s|97.2%
-Both mods | 66.5 H/s|91.7%
+Both mods | 60.5 H/s|83.4%
 shuffle_with_lag\* | 70.9 H/s|97.8%
 
 Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz), 1 thread
@@ -94,18 +94,18 @@ Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2150 MHz, 1
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 466.7 H/s|100.0%
-INT_MATH | 438.3 H/s|93.9%
+INT_MATH | 438.7 H/s|94.0%
 SHUFFLE | 452.4 H/s|96.9%
-Both mods | 439.1 H/s|94.1%
+Both mods | 438.1 H/s|93.9%
 
 Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2150 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 394.3 H/s|100.0%
-INT_MATH | 281.6 H/s|71.4%
+INT_MATH | 312.8 H/s|79.3%
 SHUFFLE | 355.9 H/s|90.3%
-Both mods | 257.4 H/s|65.3%
+Both mods | 254.3 H/s|64.5%
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
 
