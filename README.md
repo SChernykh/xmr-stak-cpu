@@ -67,10 +67,10 @@ Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 72.5 H/s|100.0%
-INT_MATH | 61.7 H/s|85.1%
-SHUFFLE | 70.5 H/s|97.2%
-Both mods | 60.5 H/s|83.4%
+\- | 71.8 H/s|100.0%
+INT_MATH | 61.7 H/s|85.9%
+SHUFFLE | 70.5 H/s|98.2%
+Both mods | 60.5 H/s|84.3%
 shuffle_with_lag\* | 70.9 H/s|97.8%
 
 Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz), 1 thread
