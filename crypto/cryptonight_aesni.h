@@ -391,16 +391,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		if (INT_MATH)
 		{
-			// Use division result from the _previous_ iteration to hide division latency
+			// Use division and square root results from the _previous_ iteration to hide the latency
 			ch ^= *((uint64_t*)&division_result) ^ sqrt_result;
-
-			// Calculate integer square root
-			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
-			// if the underlying hardware follows IEEE-754
-			// This is why we do bit shift: (2^64 >> 16) < 2^52 + 2^27 - 1
-			// Shift right 16 bits to have 48-bit square root due to GPU efficiency restrictions
-			const __m128d z = _mm_setzero_pd();
-			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, cl >> 16))));
 
 			// Most and least significant bits in the divisor are set to 1
 			// to make sure we don't divide by a small or even number,
@@ -412,6 +404,13 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			// Compiler will optimize it to a single div instruction
 			division_result.q = static_cast<uint32_t>(ch / static_cast<uint32_t>(cl | 0x80000001UL));
 			division_result.r = static_cast<uint32_t>(ch % static_cast<uint32_t>(cl | 0x80000001UL));
+
+			// Use division_result as an input for the square root to prevent parallel implementation in hardware
+			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
+			// if the underlying hardware follows IEEE-754
+			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
+			const __m128d z = _mm_setzero_pd();
+			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, (cl + *((uint64_t*)&division_result)) >> 16))));
 		}
 
 		lo = _umul128(idx0, cl, &hi);
