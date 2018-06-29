@@ -99,6 +99,7 @@ Mod|Hashrate|Performance level
 INT_MATH | 447.9 H/s|93.9%
 SHUFFLE | 458.2 H/s|96.0%
 Both mods | 446.7 H/s|93.6%
+Both mods, core @ 1450 MHz | 456.9 H/s|95.8%
 
 Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
