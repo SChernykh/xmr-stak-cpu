@@ -22,6 +22,8 @@ The shuffle modification makes Cryptonight 4 times more demanding for memory ban
 
 ### 2. Shuffle with lag modification
 
+**!!! Tests have shown that this modification kills GPU performance, so it's not viable. The description is only left here for the reference.**
+
 It goes one step further compared to the previous modification: it shuffles not the current cache line, but one of the previously accessed cache lines which are still in L1 cache, selected randomly. All 64 bytes are shuffled as 32 2-byte elements, so this modification requires 5 times more memory bandwidth AND 2 times more random memory accesses. The actual permutation is the following one:
 
 (  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ) ->
