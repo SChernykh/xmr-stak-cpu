@@ -91,23 +91,23 @@ GPU performance was tested using the code from this repository: https://github.c
 
 ### XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
 
-Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2150 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
+Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 466.7 H/s|100.0%
-INT_MATH | 438.7 H/s|94.0%
-SHUFFLE | 452.4 H/s|96.9%
-Both mods | 438.1 H/s|93.9%
+\- | 477.1 H/s|100.0%
+INT_MATH | 447.9 H/s|93.9%
+SHUFFLE | 458.2 H/s|96.0%
+Both mods | 446.7 H/s|93.6%
 
-Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2150 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
+Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 394.3 H/s|100.0%
-INT_MATH | 312.8 H/s|79.3%
-SHUFFLE | 355.9 H/s|90.3%
-Both mods | 254.3 H/s|64.5%
+INT_MATH | 307.5 H/s|78.0%
+SHUFFLE | 355.1 H/s|90.1%
+Both mods | 281.1 H/s|71.3%
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
 
