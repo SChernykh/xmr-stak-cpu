@@ -402,15 +402,15 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			// We drop the highest bit to fit both quotient and remainder in 32 bits
 
 			// Compiler will optimize it to a single div instruction
-			division_result.q = static_cast<uint32_t>(cx.m128i_u64[1] / (cx.m128i_u32[0] | 0x80000001UL));
-			division_result.r = static_cast<uint32_t>(cx.m128i_u64[1] % (cx.m128i_u32[0] | 0x80000001UL));
+			division_result.q = static_cast<uint32_t>(((uint64_t*)&cx)[1] / (((uint32_t*)&cx)[0] | 0x80000001UL));
+			division_result.r = static_cast<uint32_t>(((uint64_t*)&cx)[1] % (((uint32_t*)&cx)[0] | 0x80000001UL));
 
 			// Use division_result as an input for the square root to prevent parallel implementation in hardware
 			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
 			// if the underlying hardware follows IEEE-754
 			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
 			const __m128d z = _mm_setzero_pd();
-			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, (cx.m128i_u64[0] + *((uint64_t*)&division_result)) >> 16))));
+			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, (((uint64_t*)&cx)[0] + *((uint64_t*)&division_result)) >> 16))));
 		}
 
 		lo = _umul128(idx0, cl, &hi);
