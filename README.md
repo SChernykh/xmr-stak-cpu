@@ -107,8 +107,12 @@ Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 394.3 H/s|100.0%
 INT_MATH | 347.6 H/s|88.2%
+INT_MATH, intensity 1440\* | 351.4 H/s|89.1%
 SHUFFLE | 356.0 H/s|90.3%
 Both mods | 303.9 H/s|77.1%
+Both mods, intensity 1440\* | 319.7 H/s|81.1%
+
+\* Increasing intensity to 1440 improved INT_MATH and both mods performance, but made performance worse for no mods and SHUFFLE mod.
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
 
