@@ -106,10 +106,10 @@ Radeon RX 560 on Windows 10 (RX 550 simulation): core @ 595 MHz, memory @ 2200 M
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 394.3 H/s|100.0%
-INT_MATH | 348.4 H/s|88.4%
+INT_MATH | 348.6 H/s|88.4%
 INT_MATH, intensity 1440\* | 351.4 H/s|89.1%
 SHUFFLE | 356.0 H/s|90.3%
-Both mods | 304.3 H/s|77.2%
+Both mods | 304.8 H/s|77.3%
 Both mods, intensity 1440\* | 319.7 H/s|81.1%
 
 \* Increasing intensity to 1440 improved INT_MATH and both mods performance, but made performance worse for no mods and SHUFFLE mod.
