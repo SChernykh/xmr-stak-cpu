@@ -131,5 +131,5 @@ Mod|Hashrate|Performance level
 ---|--------|-----------------
 \-|319.9 H/s|100.0%
 INT_MATH|318.1 H/s|99.4%
-SHUFFLE|260.6 H/s|81.5%
-Both mods|259.8 H/s|81.2%
+SHUFFLE|292.5 H/s|91.4%
+Both mods|291.0 H/s|91.0%
