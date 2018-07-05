@@ -124,3 +124,12 @@ Mod|Hashrate|Performance level
 INT_MATH|452.2 H/s|99.7%
 SHUFFLE|422.6 H/s|93.2%
 Both mods|421.5 H/s|92.9%
+
+GeForce GTX 1050 2 GB on Windows 10: core 1721 MHz, memory 1877 MHz, monitor unplugged, intensity 448, worksize 8:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|319.9 H/s|100.0%
+INT_MATH|318.1 H/s|99.4%
+SHUFFLE|260.6 H/s|81.5%
+Both mods|259.8 H/s|81.2%
