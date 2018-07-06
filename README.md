@@ -133,3 +133,59 @@ Mod|Hashrate|Performance level
 INT_MATH|318.1 H/s|99.4%
 SHUFFLE|292.5 H/s|91.4%
 Both mods|291.0 H/s|91.0%
+
+**Results from \@mobilepolice**
+
+XFX RX560D 14CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/HC1TchsL
+
+Best Result:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 8 | 4 | FALSE | TRUE | 503.6 | 100.0%
+
+
+
+Best Result with Mods:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 8 | 8 | TRUE | TRUE | 447.3 | 88.8%
+2 | 448 | 32 | 2 | TRUE | TRUE | 446.5 | 88.7%
+
+
+
+XFX RX560 16CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/pfajCwkC
+
+Best Result:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 4 | 2 | FALSE | FALSE | 530.8 | 100.0%
+
+
+
+
+Best Result with Mods:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 8 | 8 | TRUE | TRUE | 454.7 | 85.7%
+
+
+Sapphire RX550 8CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/NZbqLcV4
+
+Best Result:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 16 | 8 | FALSE | TRUE | 496.1 | 100.0%
+
+
+
+
+Best Result with Mods:
+
+threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
+-- | -- | -- | -- | -- | -- | -- | --
+2 | 448 | 16 | 4 | TRUE | TRUE | 444.1 | 89.5%
