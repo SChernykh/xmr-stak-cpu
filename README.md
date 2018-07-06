@@ -136,7 +136,7 @@ Both mods|291.0 H/s|91.0%
 
 **Results from \@mobilepolice**
 
-XFX RX560D 14CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/HC1TchsL
+XFX RX560D 14CU 1150Mhz Core 1750Mhz Mem https://pastebin.com/HC1TchsL
 
 Best Result:
 
@@ -155,7 +155,7 @@ threads | intensity | worksize | unroll | math | shuffle | hashrate | performanc
 
 
 
-XFX RX560 16CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/pfajCwkC
+XFX RX560 16CU 1150Mhz Core 1750Mhz Mem https://pastebin.com/pfajCwkC
 
 Best Result:
 
