@@ -45,15 +45,15 @@ Good news for CPU and GPU is that division and square roots can be added to the 
 
 As you can see from this data, most modern CPUs and GPUs get < 10% slowdown. The only exception we found so far is Radeon RX 550 which gets ~11% slowdown (see the last test result) because of weak GPU core. On the other side, ASIC/FPGA which use external memory for scratchpad get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
 
-AMD Ryzen (1 thread):
+AMD Ryzen 7 1700 @ 3.6 GHz, 8 threads
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 71.1 H/s|100.0%
-INT_MATH | 70.0 H/s|98.5%
-SHUFFLE | 69.3 H/s|97.5%
-Both mods | 67.0 H/s|94.2%
-shuffle_with_lag\* | 69.1 H/s|97.2%
+\- | 600.8 H/s|100.0%
+INT_MATH | 588.0 H/s|97.9%
+SHUFFLE | 586.6 H/s|97.6%
+Both mods | 572.0 H/s|95.2%
+shuffle_with_lag\* | 587.1 H/s|97.7%
 
 Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz), 2 threads
 
@@ -115,6 +115,15 @@ Both mods, intensity 1440\* | 319.7 H/s|81.1%
 \* Increasing intensity to 1440 improved INT_MATH and both mods performance, but made performance worse for no mods and SHUFFLE mod.
 
 **It looks like RX 550 needs GPU core overclocking to properly handle new modifications.**
+
+GeForce GTX 1080 Ti 11 GB on Windows 10: core 2000 MHz, memory 11800 MHz, monitor plugged in, intensity 1280, worksize 8:
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|908.4 H/s|100.0%
+INT_MATH|902.7 H/s|99.4%
+SHUFFLE|848.6 H/s|93.4%
+Both mods|846.7 H/s|93.2%
 
 GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
 
