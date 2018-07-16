@@ -47,7 +47,7 @@ Overall, it seems that all Radeon cards will be in 85-90+% range of their Crypto
 
 On the other side, ASIC/FPGA which use external memory for scratchpad will get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad will get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
 
-AMD Ryzen 7 1700 @ 3.6 GHz, 8 threads
+**AMD Ryzen 7 1700 @ 3.6 GHz**, 8 threads
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -57,7 +57,7 @@ SHUFFLE | 586.6 H/s|97.6%
 Both mods | 572.0 H/s|95.2%
 shuffle_with_lag\* | 587.1 H/s|97.7%
 
-Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz), 2 threads
+**Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz)**, 2 threads
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -67,7 +67,7 @@ SHUFFLE | 145.3 H/s|99.2%
 Both mods | 140.5 H/s|95.9%
 shuffle_with_lag\* | 143.9 H/s|98.2%
 
-Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz), 1 thread
+**Intel Core i5 3210M (Ivy Bridge, 2 cores, 3 MB Cache, 2.80 GHz)**, 1 thread
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -77,7 +77,7 @@ SHUFFLE | 70.5 H/s|98.5%
 Both mods | 66.7 H/s|93.2%
 shuffle_with_lag\* | 70.3 H/s|98.2%
 
-Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz), 1 thread
+**Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -93,7 +93,7 @@ GPU performance was tested using the code from this repository: https://github.c
 
 ### XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
 
-Radeon RX 560 on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
+**Radeon RX 560** on Windows 10 (overclocked): core @ 1196 MHz, memory @ 2200 MHz, 1 Click PBE Timing Straps, monitor plugged in, intensity 1024, worksize 32:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -103,7 +103,7 @@ SHUFFLE | 458.7 H/s|96.1%
 Both mods | 446.9 H/s|93.7%
 Both mods, core @ 1450 MHz | 456.9 H/s|95.8%
 
-GeForce GTX 1080 Ti 11 GB on Windows 10: core 2000 MHz, memory 11800 MHz, monitor plugged in, intensity 1280, worksize 8:
+**GeForce GTX 1080 Ti 11 GB** on Windows 10: core 2000 MHz, memory 11800 MHz, monitor plugged in, intensity 1280, worksize 8:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -112,7 +112,7 @@ INT_MATH|902.7 H/s|99.4%
 SHUFFLE|848.6 H/s|93.4%
 Both mods|846.7 H/s|93.2%
 
-GeForce GTX 1060 6 GB on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
+**GeForce GTX 1060 6 GB** on Windows 10: all stock, monitor plugged in, intensity 800, worksize 8:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -121,7 +121,7 @@ INT_MATH|452.2 H/s|99.7%
 SHUFFLE|422.6 H/s|93.2%
 Both mods|421.5 H/s|92.9%
 
-GeForce GTX 1050 2 GB on Windows 10: core 1721 MHz, memory 1877 MHz, monitor unplugged, intensity 448, worksize 8:
+**GeForce GTX 1050 2 GB** on Windows 10: core 1721 MHz, memory 1877 MHz, monitor unplugged, intensity 448, worksize 8:
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -132,7 +132,7 @@ Both mods|291.0 H/s|91.0%
 
 **Results from \@mobilepolice**
 
-XFX RX560D 14CU 1150Mhz Core 1750Mhz Mem https://pastebin.com/HC1TchsL
+**XFX RX560D 14CU** 1150Mhz Core 1750Mhz Mem https://pastebin.com/HC1TchsL
 
 Best Result:
 
@@ -151,7 +151,7 @@ threads | intensity | worksize | unroll | math | shuffle | hashrate | performanc
 
 
 
-XFX RX560 16CU 1150Mhz Core 1750Mhz Mem https://pastebin.com/pfajCwkC
+**XFX RX560 16CU** 1150Mhz Core 1750Mhz Mem https://pastebin.com/pfajCwkC
 
 Best Result:
 
@@ -169,7 +169,7 @@ threads | intensity | worksize | unroll | math | shuffle | hashrate | performanc
 2 | 448 | 8 | 8 | TRUE | TRUE | 454.7 | 85.7%
 
 
-Sapphire RX550 8CU 1325Mhz Core 1760Mhz Mem https://pastebin.com/NZbqLcV4
+**Sapphire RX550 8CU** 1325Mhz Core 1760Mhz Mem https://pastebin.com/NZbqLcV4
 
 Best Result:
 
@@ -188,7 +188,7 @@ threads | intensity | worksize | unroll | math | shuffle | hashrate | performanc
 
 **Results from MoneroCrusher**
 
-RX 550 Gigabyte, 8 CU, 2200 mckl, 1250 sckl, 1 click PBE timings, Ubuntu 16.04 LTS Server, Same settings as CN7 (low electricity consumption, ~40-45W at the wall)
+**RX 550 Gigabyte, 8 CU**, 2200 mckl, 1250 sckl, 1 click PBE timings, Ubuntu 16.04 LTS Server, Same settings as CN7 (low electricity consumption, ~40-45W at the wall)
 Best Results (full results https://pastebin.com/Nr2N139a)
 
 Mod | Threads/Intensity | Worksize | Unroll | Hashrate | Performance Level
@@ -203,7 +203,7 @@ Both mods | 2/448 | 32 | 8 | 415.2 H/s | 81.8%
 
 Here I have to note that 432 intensity works better for no mods while 448 works better for mods (about 3% better).
 
-RX Vega 56, 56 CU, 915mckl, 1590sckl, stock BIOS, Windows 10, 18.5.2 Drivers,
+**RX Vega 56, 56 CU**, 915mckl, 1590sckl, stock BIOS, Windows 10, 18.5.2 Drivers,
 Best Results (full results: https://pastebin.com/kz0fYhrr)
 
 Mod | Threads/Intensity | Worksize | Unroll | Hashrate | Performance Level
