@@ -24,14 +24,14 @@ The shuffle modification makes Cryptonight 4 times more demanding for memory ban
 
 **!!! Tests have shown that this modification kills GPU performance, so it's not viable. The description is only left here for the reference.**
 
-It goes one step further compared to the previous modification: it shuffles not the current cache line, but one of the previously accessed cache lines which are still in L1 cache, selected randomly. All 64 bytes are shuffled as 32 2-byte elements, so this modification requires 5 times more memory bandwidth AND 2 times more random memory accesses. The actual permutation is the following one:
+~~It goes one step further compared to the previous modification: it shuffles not the current cache line, but one of the previously accessed cache lines which are still in L1 cache, selected randomly. All 64 bytes are shuffled as 32 2-byte elements, so this modification requires 5 times more memory bandwidth AND 2 times more random memory accesses. The actual permutation is the following one:~~
 
-(  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ) ->
-( 18 22 19 23 16 17 20 21  2  5  3  4  6  7  0  1 25 30 31 24 26 27 28 29 13  9  8 12 10 11 14 15 )
+~~(  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 ) ->
+( 18 22 19 23 16 17 20 21  2  5  3  4  6  7  0  1 25 30 31 24 26 27 28 29 13  9  8 12 10 11 14 15 )~~
 
-Unlike the simple shuffle modification, shuffle with lag takes full advantage of large and fast L1 cache, without slowing down CPU. As for GPU, they also have cache, but the maximum lag needs to be fine tuned to find a point where it's still large enough and doesn't slow down GPU.
+~~Unlike the simple shuffle modification, shuffle with lag takes full advantage of large and fast L1 cache, without slowing down CPU. As for GPU, they also have cache, but the maximum lag needs to be fine tuned to find a point where it's still large enough and doesn't slow down GPU.~~
 
-Current maximum lag is 256 cache lines (16 KB of previously accessed data), but as I said, it can be reduced if GPUs perform bad.
+~~Current maximum lag is 256 cache lines (16 KB of previously accessed data), but as I said, it can be reduced if GPUs perform bad.~~
 
 ### 3. Integer math modification
 
@@ -43,7 +43,9 @@ Good news for CPU and GPU is that division and square roots can be added to the 
 
 # Performance
 
-As you can see from this data, most modern CPUs and GPUs get < 10% slowdown. The only exception we found so far is Radeon RX 550 which gets ~11% slowdown (see the last test result) because of weak GPU core. On the other side, ASIC/FPGA which use external memory for scratchpad get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
+Overall, it seems that all Radeon cards will be in 85-90+% range of their CryptonightV1 performance in the end after the community has more time to get familiar with these mods and come up with tuning manuals. All GeForce cards will be in 90-95+% range of their CryptonightV1 performance, so their relative performance will improve a few percent comparing to Radeons. And there is always some room for further performance improvement in the mining software itself, so overall network hashrate will only drop 5-10%.
+
+On the other side, ASIC/FPGA which use external memory for scratchpad will get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad will get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
 
 AMD Ryzen 7 1700 @ 3.6 GHz, 8 threads
 
