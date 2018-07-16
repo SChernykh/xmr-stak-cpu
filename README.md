@@ -198,3 +198,31 @@ Best Result with Mods:
 threads | intensity | worksize | unroll | math | shuffle | hashrate | performance
 -- | -- | -- | -- | -- | -- | -- | --
 2 | 448 | 16 | 4 | TRUE | TRUE | 444.1 | 89.5%
+
+**Results from MoneroCrusher**
+
+RX 550 Gigabyte, 8 CU, 2200 mckl, 1250 sckl, 1 click PBE timings, Ubuntu 16.04 LTS Server, Same settings as CN7 (low electricity consumption, ~40-45W at the wall)
+Best Results (full results https://pastebin.com/Nr2N139a)
+
+Mod | Threads/Intensity | Worksize | Unroll | Hashrate | Performance Level
+-- | -- | -- | -- | -- | --
+Reference (latest xmr-stak) | 2/432 | 8 | - | 525 H/s | -
+No Mod | 2/432 | 8 | - | 507.8 | 100%
+SHUFFLE | 2/448 | 32 | 1 | 459.7 H/s | 90.5%
+SHUFFLE | 2/448 | 32 | 8 | 459.7 H/s | 90.5%
+INT_MATH | 2/448 | 16 | 8 | 464 H/s | 91.4%
+Both mods | 2/448 | 32 | 1 | 417.2 H/s | 82.2%
+Both mods | 2/448 | 32 | 8 | 415.2 H/s | 81.8%
+
+Here I have to note that 432 intensity works better for no mods while 448 works better for mods (about 3% better).
+
+RX Vega 56, 56 CU, 915mckl, 1590sckl, stock BIOS, Windows 10, 18.5.2 Drivers,
+Best Results (full results: https://pastebin.com/kz0fYhrr)
+
+Mod | Threads/Intensity | Worksize | Unroll | Hashrate | Performance Level
+-- | -- | -- | -- | -- | --
+Reference (latest xmr-stak) | 2/1800 | 8 | - | 1865 H/s | -
+No Mod | 2/1800 | 16 | - | 1869 H/s | 100%
+SHUFFLE | 2/1800 | 16 | 8 | 1714 H/s | 92.2%
+INT_MATH | 2/1800 | 16 | 1 | 1763 H/s | 94.3%
+Both mods | 2/1800 | 32 | 8 | 1595 H/s | 85.3%
