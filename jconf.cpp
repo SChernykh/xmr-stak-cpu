@@ -32,7 +32,6 @@
 #define strcasecmp _stricmp
 #include <intrin.h>
 #else
-#include <cpuid.h>
 #endif
 
 #include "rapidjson/document.h"
@@ -269,28 +268,10 @@ const char* jconf::GetOutputFile()
 	return prv->configValues[sOutputFile]->GetString();
 }
 
-void jconf::cpuid(uint32_t eax, int32_t ecx, int32_t val[4])
-{
-	memset(val, 0, sizeof(int32_t)*4);
-
-#ifdef _WIN32
-	__cpuidex(val, eax, ecx);
-#else
-	__cpuid_count(eax, ecx, val[0], val[1], val[2], val[3]);
-#endif
-}
-
 bool jconf::check_cpu_features()
 {
-	constexpr int AESNI_BIT = 1 << 25;
-	constexpr int SSE2_BIT = 1 << 26;
-	int32_t cpu_info[4];
-	bool bHaveSse2;
-
-	cpuid(1, 0, cpu_info);
-
-	bHaveAes = (cpu_info[2] & AESNI_BIT) != 0;
-	bHaveSse2 = (cpu_info[3] & SSE2_BIT) != 0;
+	bHaveAes = true;
+	bool bHaveSse2 = true;
 
 	return bHaveSse2;
 }

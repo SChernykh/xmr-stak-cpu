@@ -25,11 +25,7 @@
  * The orginal author of this AES implementation is Karl Malbrain.
  */
 
-#ifdef __GNUC__
-#include <x86intrin.h>
-#else
-#include <intrin.h>
-#endif // __GNUC__
+#include "sse2neon.h"
 
 #include <inttypes.h>
 
@@ -155,10 +151,10 @@ d_4(uint32_t, t_dec(f,n), sb_data, u0, u1, u2, u3);
 __m128i soft_aesenc(__m128i in, __m128i key)
 {
 	uint32_t x0, x1, x2, x3;
-	x0 = _mm_cvtsi128_si32(in);
-	x1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0x55));
-	x2 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0xAA));
-	x3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0xFF));
+	x0 = vgetq_lane_s32(in, 0);
+	x1 = vgetq_lane_s32(in, 1);
+	x2 = vgetq_lane_s32(in, 2);
+	x3 = vgetq_lane_s32(in, 3);
 
 	__m128i out = _mm_set_epi32(
 		(t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]),
@@ -195,17 +191,15 @@ static inline void sub_word(uint8_t* key)
 	key[3] = Sbox[key[3]];
 }
 
-#ifdef __clang__
 uint32_t _rotr(uint32_t value, uint32_t amount)
 {
 	return (value >> amount) | (value << ((32 - amount) & 31));
 }
-#endif
 
 __m128i soft_aeskeygenassist(__m128i key, uint8_t rcon)
 {
-	uint32_t X1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(key, 0x55));
-	uint32_t X3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(key, 0xFF));
+	uint32_t X1 = vgetq_lane_s32(key, 1);
+	uint32_t X3 = vgetq_lane_s32(key, 3);
 	sub_word((uint8_t*)&X1);
 	sub_word((uint8_t*)&X3);
 	return _mm_set_epi32(_rotr(X3, 8) ^ rcon, X3,_rotr(X1, 8) ^ rcon, X1);

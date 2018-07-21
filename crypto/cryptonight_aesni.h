@@ -18,19 +18,15 @@
 #include "cryptonight.h"
 #include <memory.h>
 #include <stdio.h>
+#include <math.h>
+#include "sse2neon.h"
 
-#ifdef __GNUC__
-#include <x86intrin.h>
 static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
 {
 	unsigned __int128 r = (unsigned __int128)a * (unsigned __int128)b;
 	*hi = r >> 64;
 	return (uint64_t)r;
 }
-#define _mm256_set_m128i(v0, v1)  _mm256_insertf128_si256(_mm256_castsi128_si256(v1), (v0), 1)
-#else
-#include <intrin.h>
-#endif // __GNUC__
 
 #if !defined(_LP64) && !defined(_WIN64)
 #error You are trying to do a 32-bit build. This will all end in tears. I know it.
@@ -409,8 +405,9 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
 			// if the underlying hardware follows IEEE-754
 			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
-			const __m128d z = _mm_setzero_pd();
-			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, (((uint64_t*)&cx)[0] + *((uint64_t*)&division_result)) >> 16))));
+			const double z = static_cast<double>((((uint64_t*)&cx)[0] + *((uint64_t*)&division_result)) >> 16);
+			const int64_t z1 = static_cast<int64_t>(sqrt(z));
+			sqrt_result = static_cast<uint32_t>(z1);
 		}
 
 		lo = _umul128(idx0, cl, &hi);
