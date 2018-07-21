@@ -249,51 +249,31 @@ bool minethd::self_test()
 	if(res == 0 && fatal)
 		return false;
 
-	cryptonight_ctx *ctx0, *ctx1;
+	cryptonight_ctx *ctx0;
 	if((ctx0 = minethd_alloc_ctx()) == nullptr)
 		return false;
 
-	if((ctx1 = minethd_alloc_ctx()) == nullptr)
+	unsigned char out[64];
+
+	cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>("This is a test", 14, out, ctx0);
+	if (memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) != 0)
 	{
-		cryptonight_free_ctx(ctx0);
+		printer::inst()->print_msg(L0, "Cryptonight hash self-test (no mods) failed. This might be caused by bad compiler optimizations.");
 		return false;
 	}
+	printer::inst()->print_msg(L0, "Cryptonight hash self-test (no mods) passed.");
 
-	return true;
-/*
-	unsigned char out[64];
-	bool bResult;
-
-	cn_hash_fun hashf;
-	cn_hash_fun_dbl hashdf;
-
-	hashf = func_selector(jconf::inst()->HaveHardwareAes(), false);
-	hashf("This is a test", 14, out, ctx0);
-	bResult = memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) == 0;
-
-	hashf = func_selector(jconf::inst()->HaveHardwareAes(), true);
-	hashf("This is a test", 14, out, ctx0);
-	bResult &= memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) == 0;
-
-	hashdf = func_dbl_selector(jconf::inst()->HaveHardwareAes(), false);
-	hashdf("The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy log", 43, out, ctx0, ctx1);
-	bResult &= memcmp(out, "\x3e\xbb\x7f\x9f\x7d\x27\x3d\x7c\x31\x8d\x86\x94\x77\x55\x0c\xc8\x00\xcf\xb1\x1b\x0c\xad\xb7\xff\xbd\xf6\xf8\x9f\x3a\x47\x1c\x59"
-		                   "\xb4\x77\xd5\x02\xe4\xd8\x48\x7f\x42\xdf\xe3\x8e\xed\x73\x81\x7a\xda\x91\xb7\xe2\x63\xd2\x91\x71\xb6\x5c\x44\x3a\x01\x2a\x41\x22", 64) == 0;
-
-	hashdf = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true);
-	hashdf("The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy log", 43, out, ctx0, ctx1);
-	bResult &= memcmp(out, "\x3e\xbb\x7f\x9f\x7d\x27\x3d\x7c\x31\x8d\x86\x94\x77\x55\x0c\xc8\x00\xcf\xb1\x1b\x0c\xad\xb7\xff\xbd\xf6\xf8\x9f\x3a\x47\x1c\x59"
-		                   "\xb4\x77\xd5\x02\xe4\xd8\x48\x7f\x42\xdf\xe3\x8e\xed\x73\x81\x7a\xda\x91\xb7\xe2\x63\xd2\x91\x71\xb6\x5c\x44\x3a\x01\x2a\x41\x22", 64) == 0;
+	cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>("This is a test", 14, out, ctx0);
+	if (memcmp(out, "\xca\xd6\x80\xde\x02\x5c\x06\xad\x7c\xaa\xe4\xfd\x75\xe5\xa9\x5c\x09\xec\x49\x0a\x97\x54\x5a\xf3\xa9\x6e\xb8\x2d\xa6\x76\x32\xe6", 32) != 0)
+	{
+		printer::inst()->print_msg(L0, "Cryptonight hash self-test (both mods) failed. This might be caused by bad compiler optimizations.");
+		return false;
+	}
+	printer::inst()->print_msg(L0, "Cryptonight hash self-test (both mods) passed.");
 
 	cryptonight_free_ctx(ctx0);
-	cryptonight_free_ctx(ctx1);
 
-	if(!bResult)
-		printer::inst()->print_msg(L0,
-		    "Cryptonight hash self-test failed. This might be caused by bad compiler optimizations.");
-
-	return bResult;
-*/
+	return true;
 }
 
 std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
