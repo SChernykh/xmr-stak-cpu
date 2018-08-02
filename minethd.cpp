@@ -27,6 +27,7 @@
 #include <cstring>
 #include <thread>
 #include <bitset>
+#include <fstream>
 #include "console.h"
 
 #ifdef _WIN32
@@ -253,26 +254,55 @@ bool minethd::self_test()
 	if((ctx0 = minethd_alloc_ctx()) == nullptr)
 		return false;
 
-	unsigned char out[64];
-
-	cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>("This is a test", 14, out, ctx0);
-	if (memcmp(out, "\xa0\x84\xf0\x1d\x14\x37\xa0\x9c\x69\x85\x40\x1b\x60\xd4\x35\x54\xae\x10\x58\x02\xc5\xf5\xd8\xa9\xb3\x25\x36\x49\xc0\xbe\x66\x05", 32) != 0)
+	std::ifstream f("tests.txt");
+	while (!f.eof())
 	{
-		printer::inst()->print_msg(L0, "Cryptonight hash self-test (no mods) failed. This might be caused by bad compiler optimizations.");
-		return false;
-	}
-	printer::inst()->print_msg(L0, "Cryptonight hash self-test (no mods) passed.");
+		std::string input;
+		std::getline(f, input);
+		if (input.empty())
+		{
+			continue;
+		}
 
-	cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>("This is a test", 14, out, ctx0);
-	if (memcmp(out, "\xca\xd6\x80\xde\x02\x5c\x06\xad\x7c\xaa\xe4\xfd\x75\xe5\xa9\x5c\x09\xec\x49\x0a\x97\x54\x5a\xf3\xa9\x6e\xb8\x2d\xa6\x76\x32\xe6", 32) != 0)
-	{
-		printer::inst()->print_msg(L0, "Cryptonight hash self-test (both mods) failed. This might be caused by bad compiler optimizations.");
-		return false;
+		enum { HASH_SIZE = 32 };
+		for (int i = 0; i < 3; ++i)
+		{
+			char hash[32];
+			if (i == 0)
+				cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>(input.c_str(), input.length(), hash, ctx0);
+			else if (i == 2)
+				cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>(input.c_str(), input.length(), hash, ctx0);
+
+			std::string output;
+			std::getline(f, output);
+			if (output.length() != HASH_SIZE * 2)
+			{
+				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
+				return false;
+			}
+
+			if (i == 1)
+			{
+				continue;
+			}
+
+			char reference_hash[HASH_SIZE];
+			for (int j = 0; j < HASH_SIZE; ++j)
+			{
+				reference_hash[j] = static_cast<char>(std::stoul(output.substr(j * 2, 2), 0, 16));
+			}
+
+			if (memcmp(hash, reference_hash, HASH_SIZE) != 0)
+			{
+				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
+				return false;
+			}
+		}
 	}
-	printer::inst()->print_msg(L0, "Cryptonight hash self-test (both mods) passed.");
 
 	cryptonight_free_ctx(ctx0);
 
+	printer::inst()->print_msg(L0, "Cryptonight hash self-test passed.");
 	return true;
 }
 
