@@ -57,6 +57,16 @@ SHUFFLE | 586.6 H/s|97.6%
 Both mods | 572.0 H/s|95.2%
 shuffle_with_lag\* | 587.1 H/s|97.7%
 
+**AMD Ryzen 5 2600 @ 3.9 GHz**, 1 thread
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 94.6 H/s|100.0%
+INT_MATH | 92.3 H/s|97.6%
+SHUFFLE | 92.2 H/s|97.5%
+Both mods | 89.5 H/s|94.6%
+shuffle_with_lag\* | 91.0 H/s|96.2%
+
 **Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz)**, 2 threads
 
 Mod|Hashrate|Performance level
