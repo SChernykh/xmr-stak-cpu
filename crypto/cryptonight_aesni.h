@@ -312,15 +312,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	enum { CACHELINE_HISTORY_SIZE = 256 };
 	uint16_t cacheline_history[CACHELINE_HISTORY_SIZE] = {};
 
-	struct
-	{
-		uint32_t q;
-		uint32_t r;
-	} division_result;
-	static_assert(sizeof(division_result) == sizeof(uint64_t), "Two uint32_t's in a struct don't add up to a single uint64_t. Check your compiler flags.");
-
-	*((uint64_t*)&division_result) = 0;
-	uint32_t sqrt_result = 0;
+	__m128i division_result_xmm = {};
+	__m128d sqrt_result_xmm = {};
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
@@ -392,7 +385,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		if (INT_MATH)
 		{
 			// Use division and square root results from the _previous_ iteration to hide the latency
-			ch ^= *((uint64_t*)&division_result) ^ sqrt_result;
+			ch ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm)) ^ static_cast<uint32_t>(_mm_cvttsd_si64(sqrt_result_xmm));
+			const uint32_t d = ((uint32_t*)&cx)[0] | 0x80000001UL;
 
 			// Most and least significant bits in the divisor are set to 1
 			// to make sure we don't divide by a small or even number,
@@ -402,15 +396,16 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			// We drop the highest bit to fit both quotient and remainder in 32 bits
 
 			// Compiler will optimize it to a single div instruction
-			division_result.q = static_cast<uint32_t>(((uint64_t*)&cx)[1] / (((uint32_t*)&cx)[0] | 0x80000001UL));
-			division_result.r = static_cast<uint32_t>(((uint64_t*)&cx)[1] % (((uint32_t*)&cx)[0] | 0x80000001UL));
+			const uint64_t division_result = static_cast<uint32_t>(((uint64_t*)&cx)[1] / d) + ((((uint64_t*)&cx)[1] % d) << 32);
+			division_result_xmm = _mm_cvtsi64_si128(static_cast<int64_t>(division_result));
 
 			// Use division_result as an input for the square root to prevent parallel implementation in hardware
 			// The code is precise for all numbers < 2^52 + 2^27 - 1, no matter the rounding mode,
 			// if the underlying hardware follows IEEE-754
-			// This is why we do bit shift: (2^64 >> 12) < 2^52 + 2^27 - 1
+			// This is why we do bit shift: (2^64 >> 16) < 2^48 < 2^52 + 2^27 - 1
+			const uint64_t sqrt_input = (((uint64_t*)&cx)[0] + division_result) >> 16;
 			const __m128d z = _mm_setzero_pd();
-			sqrt_result = static_cast<uint32_t>(_mm_cvttsd_si64(_mm_sqrt_sd(z, _mm_cvtsi64_sd(z, (((uint64_t*)&cx)[0] + *((uint64_t*)&division_result)) >> 16))));
+			sqrt_result_xmm = _mm_sqrt_sd(z, _mm_cvtsi64_sd(z, sqrt_input));
 		}
 
 		lo = _umul128(idx0, cl, &hi);
