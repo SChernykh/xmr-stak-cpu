@@ -164,11 +164,14 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	bIntMath = int_math;
 	bShuffleWithLag = shuffle_with_lag;
 	this->affinity = affinity;
+	thdHandle = 0;
 
 	if(double_work)
 		oWorkThd = std::thread(&minethd::double_work_main, this);
 	else
 		oWorkThd = std::thread(&minethd::work_main, this);
+
+	thdHandle = oWorkThd.native_handle();
 }
 
 std::atomic<uint64_t> minethd::iGlobalJobNo;
@@ -431,7 +434,8 @@ void minethd::pin_thd_affinity()
 #if defined(__APPLE__)
 	printer::inst()->print_msg(L1, "WARNING on MacOS thread affinity is only advisory.");
 #endif
-	thd_setaffinity(oWorkThd.native_handle(), affinity);
+	while (thdHandle.load() == 0) {}
+	thd_setaffinity(thdHandle.load(), affinity);
 }
 
 void minethd::work_main()

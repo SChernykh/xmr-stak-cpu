@@ -132,6 +132,7 @@ private:
 	void pin_thd_affinity();
 
 	std::thread oWorkThd;
+	std::atomic<std::thread::native_handle_type> thdHandle;
 	uint8_t iThreadNo;
 	int64_t affinity;
 
