@@ -304,7 +304,8 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	__m128i bx0 = _mm_set_epi64x(h0[3] ^ h0[7], h0[2] ^ h0[6]);
 
 	uint64_t idx0 = h0[0] ^ h0[4];
-	uint32_t idx1 = idx0 & 0x1FFFF0;
+	uint64_t idx1 = idx0 & 0x1FFFF0;
+	uint64_t* ptr0 = (uint64_t*)&l0[idx1];
 
 	// 2 MB scratchpad = 32768 cache lines, uint16_t will be enough for indexing
 	// History size is up to 256 lines = 16 KB which is 50% of a typical L1 cache size on modern CPUs
@@ -326,7 +327,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		}
 
 		__m128i cx;
-		cx = _mm_load_si128((__m128i *)&l0[idx1]);
+		cx = _mm_load_si128((__m128i *)ptr0);
 
 		if(SOFT_AES)
 			cx = soft_aesenc(cx, _mm_set_epi64x(ah0, al0));
@@ -364,9 +365,10 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x30], _mm_shufflelo_epi16(_mm_shuffle_epi32(chunk2, _MM_SHUFFLE(3, 1, 2, 0)), _MM_SHUFFLE(2, 0, 3, 1)));
 		}
 
-		_mm_store_si128((__m128i *)&l0[idx1], _mm_xor_si128(bx0, cx));
+		_mm_store_si128((__m128i *)ptr0, _mm_xor_si128(bx0, cx));
 		idx0 = _mm_cvtsi128_si64(cx);
 		idx1 = idx0 & 0x1FFFF0;
+		ptr0 = (uint64_t*)&l0[idx1];
 		bx0 = cx;
 
 		if (SHUFFLE_WITH_LAG)
@@ -376,11 +378,11 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		}
 
 		if(PREFETCH)
-			_mm_prefetch((const char*)&l0[idx1], _MM_HINT_T0);
+			_mm_prefetch((const char*)ptr0, _MM_HINT_T0);
 
 		uint64_t hi, lo, cl, ch;
-		cl = ((uint64_t*)&l0[idx1])[0];
-		ch = ((uint64_t*)&l0[idx1])[1];
+		cl = ptr0[0];
+		ch = ptr0[1];
 
 		if (INT_MATH)
 		{
@@ -443,15 +445,16 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		al0 += hi;
 		ah0 += lo;
-		((uint64_t*)&l0[idx1])[0] = al0;
-		((uint64_t*)&l0[idx1])[1] = ah0;
+		ptr0[0] = al0;
+		ptr0[1] = ah0;
 		ah0 ^= ch;
 		al0 ^= cl;
 		idx0 = al0;
 		idx1 = idx0 & 0x1FFFF0;
+		ptr0 = (uint64_t*)&l0[idx1];
 
 		if(PREFETCH)
-			_mm_prefetch((const char*)&l0[idx1], _MM_HINT_T0);
+			_mm_prefetch((const char*)ptr0, _MM_HINT_T0);
 	}
 
 	// Optim - 90% time boundary
