@@ -385,7 +385,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		if (INT_MATH)
 		{
 			// Use division and square root results from the _previous_ iteration to hide the latency
-			ch ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm)) ^ static_cast<uint32_t>(_mm_cvttsd_si64(sqrt_result_xmm));
+			ch ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm)) ^ static_cast<uint64_t>(_mm_cvttsd_si64(sqrt_result_xmm));
 			const uint32_t d = ((uint32_t*)&cx)[0] | 0x80000001UL;
 
 			// Most and least significant bits in the divisor are set to 1
