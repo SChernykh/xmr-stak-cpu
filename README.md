@@ -66,10 +66,10 @@ Both mods | 140.5 H/s|95.9%
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
-\- | 71.6 H/s|100.0%
-INT_MATH | 69.3 H/s|96.8%
-SHUFFLE | 70.5 H/s|98.5%
-Both mods | 66.7 H/s|93.2%
+\- | 72.7 H/s|100.0%
+INT_MATH | 66.3 H/s|91.2%
+SHUFFLE | 71.1 H/s|97.8%
+Both mods | 66.3 H/s|91.2%
 
 **Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
