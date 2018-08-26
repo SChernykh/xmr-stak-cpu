@@ -92,6 +92,7 @@ Mod|Hashrate|Performance level
 INT_MATH | 448.4 H/s|94.0%
 SHUFFLE | 457.6 H/s|95.9%
 Both mods\* | 447.0 H/s|93.7%
+
 \* Setting GPU core to anything but 1196 MHz made performance worse
 
 **GeForce GTX 1080 Ti 11 GB** on Windows 10: core 2000 MHz, memory 11800 MHz, monitor plugged in, intensity 1280, worksize 8:
