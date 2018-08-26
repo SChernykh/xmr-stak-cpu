@@ -119,10 +119,10 @@ GPU performance was tested using the code from this repository: https://github.c
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \- | 477.1 H/s|100.0%
-INT_MATH | 448.3 H/s|94.0%
-SHUFFLE | 458.7 H/s|96.1%
-Both mods | 446.9 H/s|93.7%
-Both mods, core @ 1450 MHz | 456.9 H/s|95.8%
+INT_MATH | 448.4 H/s|94.0%
+SHUFFLE | 457.6 H/s|95.9%
+Both mods\* | 447.0 H/s|93.7%
+\* Setting GPU core to anything but 1196 MHz made performance worse
 
 **GeForce GTX 1080 Ti 11 GB** on Windows 10: core 2000 MHz, memory 11800 MHz, monitor plugged in, intensity 1280, worksize 8:
 
