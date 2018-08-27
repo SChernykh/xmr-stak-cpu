@@ -289,7 +289,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 11, xout7);
 }
 
-static __forceinline __m128i int_sqrt33_1_double_precision(const uint64_t n0)
+inline __m128i int_sqrt33_1_double_precision(const uint64_t n0)
 {
 	__m128d x = _mm_castsi128_pd(_mm_add_epi64(_mm_cvtsi64_si128(n0 >> 12), _mm_set_epi64x(0, 1023ULL << 52)));
 	x = _mm_sqrt_sd(_mm_setzero_pd(), x);
@@ -300,7 +300,7 @@ static __forceinline __m128i int_sqrt33_1_double_precision(const uint64_t n0)
 
 	uint64_t x2 = (s - (1022ULL << 32)) * (r - s - (1022ULL << 32) + 1);
 	//if (x2 < n0) ++r;
-	_addcarry_u64(_subborrow_u64(0, x2, n0, &x2), r, 0, &r);
+	_addcarry_u64(_subborrow_u64(0, x2, n0, (unsigned long long int*)&x2), r, 0, (unsigned long long int*)&r);
 
 	return _mm_cvtsi64_si128(r);
 }
@@ -327,7 +327,6 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	__m128i division_result_xmm = _mm_cvtsi64_si128(h0[12]);
 	__m128i sqrt_result_xmm = _mm_cvtsi64_si128(h0[13]);
 
-	_control87(RC_DOWN, MCW_RC);
 
 	// Optim - 90% time boundary
 	for(size_t i = 0; i < ITERATIONS; i++)
