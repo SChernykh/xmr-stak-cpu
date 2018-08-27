@@ -29,7 +29,6 @@
 #include <bitset>
 #include <fstream>
 #include "console.h"
-
 #ifdef _WIN32
 #include <windows.h>
 
@@ -270,7 +269,8 @@ bool minethd::self_test()
 		enum { HASH_SIZE = 32 };
 		for (int i = 0; i < 3; ++i)
 		{
-			char hash[32];
+			char hash[33];
+			hash[32] = '0';
 			if (i == 0)
 				cryptonight_hash<0x80000, MEMORY, false, false, false, false>(input.c_str(), input.length(), hash, ctx0);
 			else if (i == 2)
@@ -294,7 +294,6 @@ bool minethd::self_test()
 			{
 				reference_hash[j] = static_cast<char>(std::stoul(output.substr(j * 2, 2), 0, 16));
 			}
-
 			if (memcmp(hash, reference_hash, HASH_SIZE) != 0)
 			{
 				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
