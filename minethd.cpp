@@ -272,9 +272,9 @@ bool minethd::self_test()
 		{
 			char hash[32];
 			if (i == 0)
-				cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>(input.c_str(), input.length(), hash, ctx0);
+				cryptonight_hash<0x80000, MEMORY, false, false, false, false>(input.c_str(), input.length(), hash, ctx0);
 			else if (i == 2)
-				cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>(input.c_str(), input.length(), hash, ctx0);
+				cryptonight_hash<0x80000, MEMORY, false, false, true, true>(input.c_str(), input.length(), hash, ctx0);
 
 			std::string output;
 			std::getline(f, output);
@@ -359,69 +359,44 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, bool bShuffleWithLag)
+minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, bool /*bShuffleWithLag*/)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE
 
-	static const cn_hash_fun func_table[32] = {
-		// Original cryptonight with shuffle and division and shuffle-with-lag
-		cryptonight_hash<0x80000, MEMORY, false, false, true, true, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, true, true>,
-
-		// Original cryptonight with division and shuffle-with-lag
-		cryptonight_hash<0x80000, MEMORY, false, false, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, true, true>,
-
-		// Original cryptonight with shuffle and shuffle-with-lag
-		cryptonight_hash<0x80000, MEMORY, false, false, true, false, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, false, true>,
-
-		// Original cryptonight with shuffle-with-lag
-		cryptonight_hash<0x80000, MEMORY, false, false, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, false, true>,
-
+	static const cn_hash_fun func_table[16] = {
 		// Original cryptonight with shuffle and division
-		cryptonight_hash<0x80000, MEMORY, false, false, true, true, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, true>,
 
 		// Original cryptonight with division
-		cryptonight_hash<0x80000, MEMORY, false, false, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, true>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, true>,
 
 		// Original cryptonight with shuffle
-		cryptonight_hash<0x80000, MEMORY, false, false, true, false, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, true, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, true, false>,
 
 		// Original cryptonight
-		cryptonight_hash<0x80000, MEMORY, false, false, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, false, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, false, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, true, false, false>,
 	};
 
-	std::bitset<5> digit;
+	std::bitset<4> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
 	digit.set(2, !bShuffle);
 	digit.set(3, !bIntMath);
-	digit.set(4, !bShuffleWithLag);
 
 	return func_table[digit.to_ulong()];
 }
