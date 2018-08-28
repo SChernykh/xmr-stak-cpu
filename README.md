@@ -38,6 +38,22 @@ The shuffle modification makes Cryptonight 4 times more demanding for memory ban
 
 It adds one 64:32 bit integer division and one 64 bit integer square root per iteration.
 
+Integer division is defined as follows:
+1) `Divisor(bits 0-31) = (AES_ROUND_OUTPUT(bits 0-31) + sqrt_result * 2) | 0x80000001` where sqrt_result is 32-bit unsigned integer from the previous iteration. Divisor being dependent on `sqrt_result` creates dependency chain and ensures that two different iterations can't be run in parallel.
+2) `Dividend(bits 0-63) = AES_ROUND_OUTPUT(bits 64-127)`
+3) `Quotient(bits 0-31 of division_result) = (Dividend / Divisor)(bits 0-31)`
+4) `Remainder(bits 32-63 of division_result) = (Dividend % Divisor)(bits 0-31)`
+
+Square root is defined as follows:
+1) `sqrt_input(bits 0-63) = AES_ROUND_OUTPUT(bits 0-63) + division_result(bits 0-63)`. Sqrt input being dependent on `division_result` creates dependency chain and ensures that sqrt can't be run in parallel with division.
+2) `sqrt_result(bits 0-31) = Integer part of "sqrt(2^64 + sqrt_input) * 2 - 2^33"`
+
+Both `division_result` and `sqrt_result` are blended in the main loop of Cryptonight as follows:
+1) Data from second memory read is taken - it's 16 bytes, but only first 8 bytes are changed
+2) Bits 0-63 are XOR'ed with bits 0-63 of `division_result`
+3) Bits 32-63 are XOR'ed with bits 0-31 of `sqrt_result`
+4) Changing bits 0-63 of the second memory read's data guarantees that every bit of `division_result` and `sqrt_result` influences all bits of the address for the next memory read and is also stored to the scratchpad - see the code of the original Cryptonight algorithm. ASIC can't skip calculating div+sqrt to continue the main loop.
+
 Adding integer division and integer square roots to the main loop ramps up the complexity of ASIC/FPGA and silicon area needed to implement it, so they'll be much less efficient with the same transistor budget and/or power consumption. Most common hardware implementations of division and square roots require a lot of clock cycles of latency: at least 8 cycles for 64:32 bit division and the same 8 cycles for 64 bit square root. These latencies are achieved for the best and fastest hardware implementations I could find. And the way this modification is made ensures that division and square root from the same main loop iteration can't be done in parallel, so their latencies add up making it staggering 16 cycles per iteration in the best case, comparing to 1 cycle per iteration in the original Crytonight. Even though this latency can be hidden in pipelined implementations, it will require A LOT of logical elements/silicon area to implement. Hiding the latency will also require many parallel scratchpads which will be a strong limiting factor for hardware with on-chip memory. They just don't have enough memory to hide the latency entirely. My rough estimates show ~15x slowdown in this case.
 
 Good news for CPU and GPU is that division and square roots can be added to the main loop in such a way that their latency is completely hidden, so again there is almost no slowdown.
