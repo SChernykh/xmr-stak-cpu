@@ -2,11 +2,33 @@
 
 It's based on the old xmr-stak-cpu repo. Only "benchmark_mode config.txt" command line is supported.
 
-### 1. Shuffle modification
+### 1. Shuffle and add modification
 
 Cryptonight is memory-intensive in terms of memory latency, but not bandwidth. Modern CPUs use 64-byte wide cache lines, but Cryptonight only loads/stores 16 bytes at a time, so 75% of available CPU cache bandwidth is wasted. ASICs are optimized for these 16 byte-wide memory accesses, so they always use 100% of whatever memory they have.
 
 The idea is to do something computationally light and safe with the other 48 bytes of the same cache line (which is loaded in L1 cache anyway) on each step. Shuffle modification, as can be guessed by its name, treats these 48 bytes as 3 16-byte elements, shuffles them and performs 6x64-bit integer additions on them to make sure ASIC can't do it via simple rewiring.
+
+The actual shuffle and add logic has 4 different cases depending on where in the 64-byte line the AES round is performed. Here are these 4 cases with variable names just like in the code. "+" operation on a 16-byte chunk means it's treated as 2 separate 64-bit unsigned integers.
+
+\-|Bytes 0-15|Bytes 16-31|Bytes 32-47|Bytes 48-63
+-|----------|-----------|-----------|-----------
+Before|AES input|chunk1|chunk2|chunk3
+After|AES output|chunk3+b1|chunk1+b|chunk2+a
+
+\-|Bytes 0-15|Bytes 16-31|Bytes 32-47|Bytes 48-63
+-|----------|-----------|-----------|-----------
+Before|chunk1|AES input|chunk3|chunk2
+After|chunk3+b1|AES output|chunk2+a|chunk1+b
+
+\-|Bytes 0-15|Bytes 16-31|Bytes 32-47|Bytes 48-63
+-|----------|-----------|-----------|-----------
+Before|chunk2|chunk3|AES input|chunk1
+After|chunk1+b|chunk2+a|AES output|chunk3+b1
+
+\-|Bytes 0-15|Bytes 16-31|Bytes 32-47|Bytes 48-63
+-|----------|-----------|-----------|-----------
+Before|chunk3|chunk2|chunk1|AES input
+After|chunk2+a|chunk1+b|chunk3+b1|AES output
 
 The shuffle modification makes Cryptonight 4 times more demanding for memory bandwidth, making ASIC/FPGA 4 times slower\*. At the same time, CPU/GPU performance stays almost the same because this bandwidth is already there, it's just not used yet. Shuffle can also be done in parallel with existing Cryptonight calculations.
 
