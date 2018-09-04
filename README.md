@@ -216,7 +216,7 @@ threads | intensity | worksize | unroll | math | shuffle | hashrate | performanc
 -- | -- | -- | -- | -- | -- | -- | --
 2 | 448 | 16 | 4 | TRUE | TRUE | 444.1 | 89.5%
 
-**Results from MoneroCrusher**
+**Results from \@MoneroCrusher**
 
 **RX 550 Gigabyte, 8 CU**, 2200 mckl, 1250 sckl, 1 click PBE timings, Ubuntu 16.04 LTS Server, Same settings as CN7 (low electricity consumption, ~40-45W at the wall)
 Best Results (full results https://pastebin.com/Nr2N139a)
@@ -243,3 +243,29 @@ No Mod | 2/1800 | 16 | - | 1869 H/s | 100%
 SHUFFLE | 2/1800 | 16 | 8 | 1714 H/s | 92.2%
 INT_MATH | 2/1800 | 16 | 1 | 1763 H/s | 94.3%
 Both mods | 2/1800 | 32 | 8 | 1595 H/s | 85.3%
+
+**Results from \@Bathmat**
+
+**RX470 4GB (Hynix mem, 2100 clock, PBE one-click timings)**
+Full results: https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-418227462
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|934 H/s|100.0%
+INT_MATH|855 H/s|91.5%
+SHUFFLE|880 H/s|94.2%
+Both mods|877 H/s|93.9%
+
+**RX480 with Hynix (2100 mem, one-click timings)**
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|884 H/s|100.0%
+Both mods|886 H/s|100.0%
+
+**RX480 with Samsung (2000 mem, one-click Uber 3.1 timings)**
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|939 H/s|100.0%
+Both mods|852 H/s|90.7%
