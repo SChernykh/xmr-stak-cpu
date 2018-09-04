@@ -256,6 +256,14 @@ INT_MATH|855 H/s|91.5%
 SHUFFLE|880 H/s|94.2%
 Both mods|877 H/s|93.9%
 
+**RX570 4gb Sapphire ITX, Hynix mem, 2000 mem clock, one click timings**
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\-|862 H/s|100.0%
+Both mods|806 H/s|93.5%
+
+
 **RX480 with Hynix (2100 mem, one-click timings)**
 
 Mod|Hashrate|Performance level
