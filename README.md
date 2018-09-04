@@ -257,11 +257,12 @@ SHUFFLE|880 H/s|94.2%
 Both mods|877 H/s|93.9%
 
 **RX570 4gb Sapphire ITX, Hynix mem, 2000 mem clock, one click timings**
+https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-418248190
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 \-|862 H/s|100.0%
-Both mods|806 H/s|93.5%
+Both mods|825 H/s|95.7%
 
 
 **RX480 with Hynix (2100 mem, one-click timings)**
