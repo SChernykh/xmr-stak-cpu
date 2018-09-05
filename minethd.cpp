@@ -172,6 +172,8 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 		oWorkThd = std::thread(&minethd::work_main, this);
 
 	thdHandle = oWorkThd.native_handle();
+	if (affinity >= 0) //-1 means no affinity
+		pin_thd_affinity();
 }
 
 std::atomic<uint64_t> minethd::iGlobalJobNo;
