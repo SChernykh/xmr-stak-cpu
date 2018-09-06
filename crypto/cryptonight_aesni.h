@@ -18,6 +18,7 @@
 #include "cryptonight.h"
 #include <memory.h>
 #include <stdio.h>
+#include <float.h>
 #include <cfenv>
 
 #ifdef __GNUC__
@@ -357,9 +358,17 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	uint64_t sqrt_result = h0[13];
 
 #ifdef PGO_BUILD
+#ifdef _MSC_VER
+	_control87(RC_UP, MCW_RC);
+#else
 	std::fesetround(FE_UPWARD);
+#endif
+#else
+#ifdef _MSC_VER
+	_control87(RC_DOWN, MCW_RC);
 #else
 	std::fesetround(FE_TOWARDZERO);
+#endif
 #endif
 
 	// Optim - 90% time boundary
