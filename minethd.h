@@ -93,6 +93,7 @@ public:
 	static void switch_work(miner_work& pWork);
 	static std::vector<minethd*>* thread_starter(miner_work& pWork);
 	static bool self_test();
+	static int pgo_instrument();
 
 	std::atomic<uint64_t> iHashCount;
 	std::atomic<uint64_t> iTimestamp;
@@ -114,7 +115,7 @@ private:
 	inline uint32_t calc_nicehash_nonce(uint32_t start, uint32_t resume)
 		{ return start | (resume * iThreadCount + iThreadNo) << 18; }
 
-	static cn_hash_fun func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, bool bShuffleWithLag);
+	static cn_hash_fun func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath);
 	static cn_hash_fun_dbl func_dbl_selector(bool bHaveAes, bool bNoPrefetch);
 
 	void work_main();
@@ -140,6 +141,5 @@ private:
 	bool bNoPrefetch;
 	bool bShuffle;
 	bool bIntMath;
-	bool bShuffleWithLag;
 };
 

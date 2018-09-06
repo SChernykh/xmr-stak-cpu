@@ -28,19 +28,14 @@
 ],
 
 /*
- * Set it to true to test Cryptonight shuffle modification: https://github.com/monero-project/monero/issues/3545#issuecomment-380117524
+ * Set it to true to test Cryptonight shuffle modification: https://github.com/SChernykh/xmr-stak-cpu#1-shuffle-and-add-modification
  */
 "test_shuffle" : false,
 
 /*
- * Set it to true to test Cryptonight integer math modification: it adds one 64:32 bit integer division and two 52 bit integer square roots per iteration
+ * Set it to true to test Cryptonight integer math modification: https://github.com/SChernykh/xmr-stak-cpu#2-integer-math-modification
  */
 "test_int_math" : false,
-
-/*
- * Set it to true to test Cryptonight lagged shuffle modification
- */
-"test_shuffle_with_lag" : false,
 
 /*
  * LARGE PAGE SUPPORT
