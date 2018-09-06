@@ -254,11 +254,17 @@ bool minethd::self_test()
 	if(res == 0 && fatal)
 		return false;
 
+	std::ifstream f("tests.txt");
+	if (!f.is_open())
+	{
+		printer::inst()->print_msg(L0, "Cryptonight hash self-test failed: tests.txt not found.");
+		return false;
+	}
+
 	cryptonight_ctx *ctx0;
 	if((ctx0 = minethd_alloc_ctx()) == nullptr)
 		return false;
 
-	std::ifstream f("tests.txt");
 	while (!f.eof())
 	{
 		std::string input;
