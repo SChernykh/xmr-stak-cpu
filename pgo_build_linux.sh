@@ -1,0 +1,9 @@
+#!/bin/bash
+rm -rf pgo_build
+mkdir pgo_build
+cmake . -DMICROHTTPD_ENABLE=OFF -DOpenSSL_ENABLE=OFF -DHWLOC_ENABLE=OFF -DPGO_BUILD_GENERATE=ON -DPGO_BUILD_USE=OFF
+make -j 1
+bin/xmr-stak-cpu /instrument
+cmake . -DMICROHTTPD_ENABLE=OFF -DOpenSSL_ENABLE=OFF -DHWLOC_ENABLE=OFF -DPGO_BUILD_GENERATE=OFF -DPGO_BUILD_USE=ON
+make -j 1
+

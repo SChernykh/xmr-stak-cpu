@@ -313,6 +313,7 @@ bool minethd::self_test()
 	return true;
 }
 
+#ifdef PGO_BUILD
 int minethd::pgo_instrument()
 {
 	printer::inst()->print_msg(L0, "Started instrumenting cryptonight_hash()");
@@ -338,6 +339,7 @@ int minethd::pgo_instrument()
 	printer::inst()->print_msg(L0, "Finished instrumenting cryptonight_hash()");
 	return 0;
 }
+#endif
 
 std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 {

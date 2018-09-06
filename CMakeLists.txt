@@ -142,6 +142,12 @@ if(WIN32)
     set(LIBS ${LIBS} wsock32 ws2_32)
 endif()
 
+option(PGO_BUILD_GENERATE "Generate data for profile guided optimizations" OFF)
+option(PGO_BUILD_USE "Use generated data for profile guided optimizations" OFF)
+if(PGO_BUILD_GENERATE AND PGO_BUILD_USE)
+    message(FATAL_ERROR "You can't set both PGO_BUILD_GENERATE and PGO_BUILD_USE")
+endif()
+
 ################################################################################
 # Compile & Link
 ################################################################################
@@ -150,6 +156,16 @@ endif()
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -maes")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2 -maes")
+    if(PGO_BUILD_GENERATE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps -fprofile-dir=pgo_build -fprofile-generate=pgo_build")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -save-temps -fprofile-dir=pgo_build -fprofile-generate=pgo_build")
+        add_definitions("-DPGO_BUILD")
+    endif()
+    if(PGO_BUILD_USE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps -fprofile-dir=pgo_build -fprofile-use=pgo_build -fprofile-correction")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -save-temps -fprofile-dir=pgo_build -fprofile-use=pgo_build -fprofile-correction")
+        add_definitions("-DPGO_BUILD")
+    endif()
 endif()
 
 # activate static libgcc and libstdc++ linking

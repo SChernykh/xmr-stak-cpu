@@ -93,7 +93,9 @@ public:
 	static void switch_work(miner_work& pWork);
 	static std::vector<minethd*>* thread_starter(miner_work& pWork);
 	static bool self_test();
+#ifdef PGO_BUILD
 	static int pgo_instrument();
+#endif
 
 	std::atomic<uint64_t> iHashCount;
 	std::atomic<uint64_t> iTimestamp;

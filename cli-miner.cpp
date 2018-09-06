@@ -73,10 +73,12 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+#ifdef PGO_BUILD
 	if ((argc > 1) && (strcmp(argv[1], "/instrument") == 0))
 	{
 		return minethd::pgo_instrument();
 	}
+#endif
 
 	minethd::self_test();
 	do_benchmark();
