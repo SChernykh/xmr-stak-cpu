@@ -81,6 +81,7 @@ Mod|Hashrate|Performance level
 INT_MATH | 91.7 H/s|94.5%
 SHUFFLE | 94.6 H/s|97.5%
 Both mods | 91.3 H/s|94.1%
+Both mods (PGO build) | 93.5 H/s|96.4%
 
 AMD Ryzen 5 2600 @ 4.0 GHz, 8 threads (affinity 0,2,4,5,6,8,10,11)
 
@@ -90,6 +91,7 @@ Mod|Hashrate|Performance level
 INT_MATH | 613.3 H/s|93.3%
 SHUFFLE | 647.0 H/s|98.4%
 Both mods | 612.3 H/s|93.1%
+Both mods (PGO build) | 622.4 H/s|94.6%
 
 **Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz)**, 2 threads
 
