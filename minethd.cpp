@@ -278,8 +278,6 @@ bool minethd::self_test()
 			else if (i == 2)
 				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, true, true);
 
-			hash_fun(input.c_str(), input.length(), hash, ctx0);
-
 			std::string output;
 			std::getline(f, output);
 			if (output.length() != HASH_SIZE * 2)
@@ -292,6 +290,8 @@ bool minethd::self_test()
 			{
 				continue;
 			}
+
+			hash_fun(input.c_str(), input.length(), hash, ctx0);
 
 			char reference_hash[HASH_SIZE];
 			for (int j = 0; j < HASH_SIZE; ++j)
