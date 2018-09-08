@@ -112,7 +112,8 @@ Mod|Hashrate|Performance level
 INT_MATH | 66.3 H/s|91.2%
 SHUFFLE | 71.1 H/s|97.8%
 Both mods | 66.3 H/s|91.2%
-Both mods (ASM optimized) | 69.3 H/s|95.3%
+Both mods (PGO build) | 66.3 H/s|91.2%
+Both mods (ASM optimized) | 69.6 H/s|95.7%
 
 **Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
