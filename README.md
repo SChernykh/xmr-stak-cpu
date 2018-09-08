@@ -82,8 +82,9 @@ INT_MATH | 91.7 H/s|94.5%
 SHUFFLE | 94.6 H/s|97.5%
 Both mods | 91.3 H/s|94.1%
 Both mods (PGO build) | 93.5 H/s|96.4%
+Both mods (ASM optimized) | 94.8 H/s|97.7%
 
-AMD Ryzen 5 2600 @ 4.0 GHz, 8 threads (affinity 0,2,4,5,6,8,10,11)
+**AMD Ryzen 5 2600 @ 4.0 GHz**, 8 threads (affinity 0,2,4,5,6,8,10,11)
 
 Mod|Hashrate|Performance level
 ---|--------|-----------------
@@ -92,6 +93,7 @@ INT_MATH | 613.3 H/s|93.3%
 SHUFFLE | 647.0 H/s|98.4%
 Both mods | 612.3 H/s|93.1%
 Both mods (PGO build) | 622.4 H/s|94.6%
+Both mods (ASM optimized) | 636.0 H/s|96.7%
 
 **Intel Pentium G5400 (Coffee Lake, 2 cores, 4 MB Cache, 3.70 GHz)**, 2 threads
 
@@ -110,6 +112,7 @@ Mod|Hashrate|Performance level
 INT_MATH | 66.3 H/s|91.2%
 SHUFFLE | 71.1 H/s|97.8%
 Both mods | 66.3 H/s|91.2%
+Both mods (ASM optimized) | 69.3 H/s|95.3%
 
 **Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
