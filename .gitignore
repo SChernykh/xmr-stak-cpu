@@ -1,9 +1,13 @@
+.vs/
 bin/
 obj/
 build/
+pgo_build/
+x64/
 xmr-stak-cpu.layout
 xmr-stak-cpu.depend
 config-debug.txt
+*.vcxproj.user
 
 # netbeans project files
 /nbproject/

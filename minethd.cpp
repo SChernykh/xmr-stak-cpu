@@ -151,7 +151,7 @@ void telemetry::push_perf_value(size_t iThd, uint64_t iHashCount, uint64_t iTime
 	iBucketTop[iThd] = (iTop + 1) & iBucketMask;
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, bool int_math, bool /*shuffle_with_lag*/, int64_t affinity)
+minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, bool int_math, int asm_version, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -162,6 +162,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	bNoPrefetch = no_prefetch;
 	bShuffle = shuffle;
 	bIntMath = int_math;
+	iAsmVersion = asm_version;
 	this->affinity = affinity;
 	thdHandle = 0;
 
@@ -280,9 +281,9 @@ bool minethd::self_test()
 			char hash[32];
 			cn_hash_fun hash_fun;
 			if (i == 0)
-				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, false, false);
+				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, false, false, 0);
 			else if (i == 2)
-				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, true, true);
+				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, true, true, 0);
 
 			std::string output;
 			std::getline(f, output);
@@ -310,6 +311,24 @@ bool minethd::self_test()
 				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
 				return false;
 			}
+
+#ifdef _MSC_VER
+			if (jconf::inst()->HaveHardwareAes() && (i == 2))
+			{
+				for (int j = 1; j <= 2; ++j)
+				{
+					char hash[32];
+					cn_hash_fun hash_fun = func_selector(true, true, true, true, j);
+					hash_fun(input.c_str(), input.length(), hash, ctx0);
+
+					if (memcmp(hash, reference_hash, HASH_SIZE) != 0)
+					{
+						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant 2, asm version %d) failed.", j);
+						return false;
+					}
+				}
+			}
+#endif
 		}
 	}
 
@@ -332,13 +351,21 @@ int minethd::pgo_instrument()
 	}
 
 	char input[64] = {};
+	cn_hash_fun hash_fun;
+	char hash[32];
 	for (int i = 0; i < 16; ++i)
 	{
-		cn_hash_fun hash_fun;
-		char hash[32];
-		hash_fun = func_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0);
+		hash_fun = func_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0, 0);
 		hash_fun(input, sizeof(input), hash, ctx0);
 	}
+
+#ifdef _MSC_VER
+	for (int i = 1; i <= 2; ++i)
+	{
+		hash_fun = func_selector(true, true, true, true, i);
+		hash_fun(input, sizeof(input), hash, ctx0);
+	}
+#endif
 
 	cryptonight_free_ctx(ctx0);
 
@@ -363,7 +390,7 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 	{
 		jconf::inst()->GetThreadConfig(i, cfg);
 
-		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.bIntMath, cfg.bShuffleWithLag, cfg.iCpuAff);
+		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.bIntMath, cfg.iAsmVersion, cfg.iCpuAff);
 		pvThreads->push_back(thd);
 
 		if(cfg.iCpuAff >= 0)
@@ -397,12 +424,50 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath)
+#ifdef _MSC_VER
+extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
+extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
+
+template<int asm_version>
+void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
+{
+	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
+	cn_explode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+
+	_control87(RC_UP, MCW_RC);
+
+	if (asm_version == 1)
+		cnv2_mainloop_ivybridge_asm(ctx0);
+	else
+		cnv2_mainloop_ryzen_asm(ctx0);
+
+	cn_implode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	keccakf((uint64_t*)ctx0->hash_state, 24);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+}
+#endif
+
+minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
-	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE
+	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
+
+#ifdef _MSC_VER
+	if (bHaveAes && bShuffle && bIntMath && (asm_version > 0))
+	{
+		switch (asm_version)
+		{
+		case 1:
+			// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
+			return cryptonight_hash_v2_asm<1>;
+		case 2:
+			// AMD Ryzen (1xxx and 2xxx series)
+			return cryptonight_hash_v2_asm<2>;
+		}
+	}
+#endif
 
 	static const cn_hash_fun func_table[16] = {
 		// Original cryptonight with shuffle and division
@@ -463,7 +528,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 
-	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath);
+	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, iAsmVersion);
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(result.bResult + 24);

@@ -18,7 +18,7 @@ public:
 		bool bNoPrefetch;
 		bool bShuffle;
 		bool bIntMath;
-		bool bShuffleWithLag;
+		int iAsmVersion;
 		long long iCpuAff;
 	};
 

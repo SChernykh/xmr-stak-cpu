@@ -1,0 +1,5 @@
+_TEXT_CNV2_MAINLOOP SEGMENT PAGE READ EXECUTE
+INCLUDE cnv2_main_loop_ivybridge.inc
+INCLUDE cnv2_main_loop_ryzen.inc
+_TEXT_CNV2_MAINLOOP ENDS
+END
