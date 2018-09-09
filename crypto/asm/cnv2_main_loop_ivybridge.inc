@@ -1,7 +1,3 @@
-PUBLIC cnv2_mainloop_ivybridge_asm
-
-ALIGN 64
-cnv2_mainloop_ivybridge_asm PROC
 	mov	 QWORD PTR [rsp+24], rbx
 	push	 rbp
 	push	 rsi
@@ -13,7 +9,7 @@ cnv2_mainloop_ivybridge_asm PROC
 	sub	 rsp, 80
 
 	stmxcsr DWORD PTR [rsp]
-	mov DWORD PTR [rsp+4], 5f80h
+	mov DWORD PTR [rsp+4], 24448
 	ldmxcsr DWORD PTR [rsp+4]
 
 	mov	 rax, QWORD PTR [rcx+48]
@@ -45,7 +41,7 @@ cnv2_mainloop_ivybridge_asm PROC
 	xor eax, eax
 	mov QWORD PTR [rsp+16], rax
 
-	mov ax, 3ffh
+	mov ax, 1023
 	shl rax, 52
 	movq xmm8, rax
 	mov r15, QWORD PTR [r9+96]
@@ -54,7 +50,7 @@ cnv2_mainloop_ivybridge_asm PROC
 	punpcklqdq xmm5, xmm0
 
 	ALIGN 64
-$main_loop:
+$main_loop_ivybridge:
 	movdqu	 xmm6, XMMWORD PTR [r10+rbx]
 	lea	 rdx, QWORD PTR [r10+rbx]
 	mov	 ecx, r10d
@@ -109,10 +105,10 @@ $main_loop:
 	sqrtsd	 xmm3, xmm0
 	movq	 rdx, xmm3
 	test	 rdx, 524287
-	je	 $sqrt_fixup
+	je	 $sqrt_fixup_ivybridge
 	psrlq	 xmm3, 19
 	psubq	 xmm3, XMMWORD PTR [rsp+16]
-$sqrt_fixup_ret:
+$sqrt_fixup_ivybridge_ret:
 
 	mov	 r9, r10
 	mov	 rax, rdi
@@ -142,7 +138,7 @@ $sqrt_fixup_ret:
 	and	 r10d, 2097136
 	xor	 r11, r12
 	dec rsi
-	jne	 $main_loop
+	jne	 $main_loop_ivybridge
 
 	ldmxcsr DWORD PTR [rsp]
 	mov	 rbx, QWORD PTR [rsp+160]
@@ -157,9 +153,9 @@ $sqrt_fixup_ret:
 	pop	 rdi
 	pop	 rsi
 	pop	 rbp
-	ret	 0
+	jmp $cnv2_main_loop_ivybridge_endp
 
-$sqrt_fixup:
+$sqrt_fixup_ivybridge:
 	dec	 rdx
 	mov	 r13, -4389456576512
 	mov	 rax, rdx
@@ -175,5 +171,6 @@ $sqrt_fixup:
 	sub	 rcx, r9
 	adc	 rdx, 0
 	movq	 xmm3, rdx
-	jmp	 $sqrt_fixup_ret
-cnv2_mainloop_ivybridge_asm ENDP
+	jmp	 $sqrt_fixup_ivybridge_ret
+
+$cnv2_main_loop_ivybridge_endp:

@@ -1,7 +1,3 @@
-PUBLIC cnv2_mainloop_ryzen_asm
-
-ALIGN 64
-cnv2_mainloop_ryzen_asm PROC
 	mov	QWORD PTR [rsp+16], rbx
 	mov	QWORD PTR [rsp+24], rbp
 	mov	QWORD PTR [rsp+32], rsi
@@ -13,7 +9,7 @@ cnv2_mainloop_ryzen_asm PROC
 	sub	rsp, 64
 
 	stmxcsr DWORD PTR [rsp]
-	mov DWORD PTR [rsp+4], 5f80h
+	mov DWORD PTR [rsp+4], 24448
 	ldmxcsr DWORD PTR [rsp+4]
 
 	mov	rax, QWORD PTR [rcx+48]
@@ -41,7 +37,8 @@ cnv2_mainloop_ryzen_asm PROC
 	movaps	XMMWORD PTR [rsp+32], xmm7
 	movaps	XMMWORD PTR [rsp+16], xmm8
 	xorps	xmm8, xmm8
-	mov rax, 3ff0000000000000h
+	mov ax, 1023
+	shl rax, 52
 	movq xmm7, rax
 	mov	r15, QWORD PTR [r9+96]
 	punpcklqdq xmm3, xmm0
@@ -49,7 +46,7 @@ cnv2_mainloop_ryzen_asm PROC
 	punpcklqdq xmm4, xmm0
 
 	ALIGN 64
-$main_loop:
+$main_loop_ryzen:
 	movdqa	xmm5, XMMWORD PTR [r10+rbx]
 	movq	xmm0, r11
 	movq	xmm6, r8
@@ -58,7 +55,6 @@ $main_loop:
 	lea	r9, QWORD PTR [rdi+rdi]
 	shl	rdi, 32
 
-	; shuffle begin
 	mov	ecx, r10d
 	mov	eax, r10d
 	xor	ecx, 16
@@ -74,7 +70,6 @@ $main_loop:
 	movdqa	XMMWORD PTR [rcx+rbx], xmm0
 	movdqa	XMMWORD PTR [rax+rbx], xmm2
 	movdqa	XMMWORD PTR [r10+rbx], xmm1
-	; shuffle end
 
 	movaps	xmm1, xmm8
 	mov	rsi, r15
@@ -96,28 +91,25 @@ $main_loop:
 	psrldq	xmm0, 8
 	movq	rax, xmm0
 
-	; integer math begin
 	div	r9
-	movq xmm0, rax					; cx1 / d
-	movq xmm1, rdx					; cx1 % d
-	punpckldq xmm0, xmm1			; xmm0.u32 = { cx1 / d, cx1 % d, don't care, don't care }
-	movq r15, xmm0					; division_result
-	paddq xmm0, xmm5				; cx0 + division_result
-	movdqa xmm2, xmm0				; sqrt_input = cx0 + division_result
+	movq xmm0, rax
+	movq xmm1, rdx
+	punpckldq xmm0, xmm1
+	movq r15, xmm0
+	paddq xmm0, xmm5
+	movdqa xmm2, xmm0
 	psrlq xmm0, 12
 	paddq	xmm0, xmm7
 	sqrtsd	xmm1, xmm0
 	movq	rdi, xmm1
 	test	rdi, 524287
-	je	$sqrt_fixup
+	je	$sqrt_fixup_ryzen
 	shr	rdi, 19
-	; integer math end
 
-$sqrt_fixup_ret:
+$sqrt_fixup_ryzen_ret:
 	mov	rax, rsi
 	mul	r14
 
-	; shuffle begin
 	mov	r9d, r10d
 	mov	ecx, r10d
 	xor	r9d, 16
@@ -132,7 +124,6 @@ $sqrt_fixup_ret:
 	movdqa	XMMWORD PTR [r9+rbx], xmm0
 	movdqa	XMMWORD PTR [rcx+rbx], xmm2
 	movdqa	XMMWORD PTR [r10+rbx], xmm1
-	; shuffle end
 
 	movdqa	xmm4, xmm3
 	add	r8, rdx
@@ -145,7 +136,7 @@ $sqrt_fixup_ret:
 	and	r10d, 2097136
 	movdqa	xmm3, xmm5
 	dec	ebp
-	jne	$main_loop
+	jne	$main_loop_ryzen
 
 	ldmxcsr DWORD PTR [rsp]
 	movaps	xmm6, XMMWORD PTR [rsp+48]
@@ -161,9 +152,9 @@ $sqrt_fixup_ret:
 	pop	r13
 	pop	r12
 	pop	rdi
-	ret	0
+	jmp $cnv2_main_loop_ryzen_endp
 
-$sqrt_fixup:
+$sqrt_fixup_ryzen:
 	movq r9, xmm2
 	dec	rdi
 	mov	rdx, 4389456576511
@@ -178,5 +169,6 @@ $sqrt_fixup:
 	imul	rcx, rax
 	sub	rcx, r9
 	adc	rdi, 0
-	jmp	$sqrt_fixup_ret
-cnv2_mainloop_ryzen_asm ENDP
+	jmp	$sqrt_fixup_ryzen_ret
+
+$cnv2_main_loop_ryzen_endp:

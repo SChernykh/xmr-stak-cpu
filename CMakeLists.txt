@@ -1,4 +1,5 @@
 project(xmr-stak-cpu)
+enable_language(ASM)
 
 cmake_minimum_required(VERSION 3.0.1)
 
@@ -186,12 +187,18 @@ add_library(xmr-stak-c
 set_property(TARGET xmr-stak-c PROPERTY C_STANDARD 99)
 target_link_libraries(xmr-stak-c ${LIBS})
 
+add_library(xmr-stak-asm
+    STATIC
+    "crypto/asm/cnv2_main_loop.S"
+)
+set_property(TARGET xmr-stak-asm PROPERTY LINKER_LANGUAGE C)
+
 add_executable(xmr-stak-cpu
     ${SRCFILES_CPP}
 )
 
 set(EXECUTABLE_OUTPUT_PATH "bin")
-target_link_libraries(xmr-stak-cpu ${LIBS} xmr-stak-c)
+target_link_libraries(xmr-stak-cpu ${LIBS} xmr-stak-c xmr-stak-asm)
 
 ################################################################################
 # Install

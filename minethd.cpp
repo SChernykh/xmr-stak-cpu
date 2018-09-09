@@ -312,7 +312,6 @@ bool minethd::self_test()
 				return false;
 			}
 
-#ifdef _MSC_VER
 			if (jconf::inst()->HaveHardwareAes() && (i == 2))
 			{
 				for (int j = 1; j <= 2; ++j)
@@ -328,7 +327,6 @@ bool minethd::self_test()
 					}
 				}
 			}
-#endif
 		}
 	}
 
@@ -359,13 +357,11 @@ int minethd::pgo_instrument()
 		hash_fun(input, sizeof(input), hash, ctx0);
 	}
 
-#ifdef _MSC_VER
 	for (int i = 1; i <= 2; ++i)
 	{
 		hash_fun = func_selector(true, true, true, true, i);
 		hash_fun(input, sizeof(input), hash, ctx0);
 	}
-#endif
 
 	cryptonight_free_ctx(ctx0);
 
@@ -424,7 +420,6 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-#ifdef _MSC_VER
 extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
 
@@ -443,7 +438,6 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
-#endif
 
 minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
 {
@@ -452,7 +446,6 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, boo
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-#ifdef _MSC_VER
 	if (bHaveAes && bShuffle && bIntMath && (asm_version > 0))
 	{
 		switch (asm_version)
@@ -465,7 +458,6 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, boo
 			return cryptonight_hash_v2_asm<2>;
 		}
 	}
-#endif
 
 	static const cn_hash_fun func_table[16] = {
 		// Original cryptonight with shuffle and division
