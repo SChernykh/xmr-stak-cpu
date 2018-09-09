@@ -120,10 +120,9 @@ Both mods (ASM optimized) | 69.6 H/s|95.7%
 Mod|Hashrate|Performance level
 ---|--------|-----------------
 -|85.6 H/S|100.0%
-Both mods|69.9 H/S|81.7%
-Both mods (PGO build)|76.0 H/S|88.8%
-Both mods (ASM optimized)|78.8 H/S|92.1%
-
+Both mods|70.6 H/S|82.5%
+Both mods (PGO build)|76.5 H/S|89.4%
+Both mods (ASM optimized)|79.2 H/S|92.5%
 
 **Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
