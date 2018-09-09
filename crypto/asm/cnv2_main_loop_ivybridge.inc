@@ -72,7 +72,7 @@ $main_loop_ivybridge:
 	movdqu	 XMMWORD PTR [rcx+rbx], xmm0
 	movq	 rcx, xmm3
 	movdqu	 XMMWORD PTR [rax+rbx], xmm2
-	movq	 rax, xmm3
+	mov	 rax, rcx
 	movdqu	 XMMWORD PTR [r10+rbx], xmm1
 	shl	 rax, 32
 	xor	 rdi, rax
