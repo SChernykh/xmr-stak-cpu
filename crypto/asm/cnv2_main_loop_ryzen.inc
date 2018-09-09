@@ -11,6 +11,11 @@ cnv2_mainloop_ryzen_asm PROC
 	push	r14
 	push	r15
 	sub	rsp, 64
+
+	stmxcsr DWORD PTR [rsp]
+	mov DWORD PTR [rsp+4], 5f80h
+	ldmxcsr DWORD PTR [rsp+4]
+
 	mov	rax, QWORD PTR [rcx+48]
 	mov	r9, rcx
 	xor	rax, QWORD PTR [rcx+16]
@@ -142,6 +147,7 @@ $sqrt_fixup_ret:
 	dec	ebp
 	jne	$main_loop
 
+	ldmxcsr DWORD PTR [rsp]
 	movaps	xmm6, XMMWORD PTR [rsp+48]
 	lea	r11, QWORD PTR [rsp+64]
 	mov	rbx, QWORD PTR [r11+56]

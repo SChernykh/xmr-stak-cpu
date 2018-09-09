@@ -11,6 +11,11 @@ cnv2_mainloop_ivybridge_asm PROC
 	push	 r14
 	push	 r15
 	sub	 rsp, 80
+
+	stmxcsr DWORD PTR [rsp]
+	mov DWORD PTR [rsp+4], 5f80h
+	ldmxcsr DWORD PTR [rsp+4]
+
 	mov	 rax, QWORD PTR [rcx+48]
 	mov	 r9, rcx
 	xor	 rax, QWORD PTR [rcx+16]
@@ -37,12 +42,11 @@ cnv2_mainloop_ivybridge_asm PROC
 	and	 r10d, 2097136
 	movq	 xmm5, rax
 
-	mov rax, 7fe00000000h
-	mov QWORD PTR [rsp+16], rax
 	xor eax, eax
-	mov QWORD PTR [rsp+24], rax
+	mov QWORD PTR [rsp+16], rax
 
-	mov rax, 3ff0000000000000h
+	mov ax, 3ffh
+	shl rax, 52
 	movq xmm8, rax
 	mov r15, QWORD PTR [r9+96]
 	punpcklqdq xmm4, xmm0
@@ -140,6 +144,7 @@ $sqrt_fixup_ret:
 	dec rsi
 	jne	 $main_loop
 
+	ldmxcsr DWORD PTR [rsp]
 	mov	 rbx, QWORD PTR [rsp+160]
 	movaps	 xmm6, XMMWORD PTR [rsp+64]
 	movaps	 xmm7, XMMWORD PTR [rsp+48]

@@ -434,8 +434,6 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
 	cn_explode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
 
-	_control87(RC_UP, MCW_RC);
-
 	if (asm_version == 1)
 		cnv2_mainloop_ivybridge_asm(ctx0);
 	else
