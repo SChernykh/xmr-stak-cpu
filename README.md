@@ -115,6 +115,16 @@ Both mods | 66.3 H/s|91.2%
 Both mods (PGO build) | 66.3 H/s|91.2%
 Both mods (ASM optimized) | 69.6 H/s|95.7%
 
+**Intel Core i7 2600K (Sandy Bridge, 4 cores, 8 MB Cache, 3.40 GHz)**, 1 thread
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+-|85.6 H/S|100.0%
+Both mods|69.9 H/S|81.7%
+Both mods (PGO build)|76.0 H/S|88.8%
+Both mods (ASM optimized)|78.8 H/S|92.1%
+
+
 **Intel Core i7 7820X (Skylake-X, 8 cores, 11 MB Cache, 3.60 GHz)**, 1 thread
 
 Mod|Hashrate|Performance level
