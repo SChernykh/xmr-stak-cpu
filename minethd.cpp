@@ -370,7 +370,8 @@ int minethd::pgo_instrument()
 	printer::inst()->print_msg(L0, "Started instrumenting cryptonight_hash()");
 
 	cryptonight_ctx *ctx0 = minethd_alloc_ctx();
-	if (!ctx0)
+	cryptonight_ctx *ctx1 = minethd_alloc_ctx();
+	if (!ctx0 || !ctx1)
 	{
 		printer::inst()->print_msg(L0, "Failed to allocate memory");
 		return 1;
@@ -378,11 +379,14 @@ int minethd::pgo_instrument()
 
 	char input[64] = {};
 	cn_hash_fun hash_fun;
-	char hash[32];
+	cn_hash_fun_dbl hash_fun_dbl;
+	char hash[64];
 	for (int i = 0; i < 16; ++i)
 	{
 		hash_fun = func_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0, 0);
+		hash_fun_dbl = func_dbl_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0, 0);
 		hash_fun(input, sizeof(input), hash, ctx0);
+		hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
 	}
 
 	for (int i = 1; i <= 2; ++i)
