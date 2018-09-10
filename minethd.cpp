@@ -262,28 +262,42 @@ bool minethd::self_test()
 		return false;
 	}
 
-	cryptonight_ctx *ctx0;
+	cryptonight_ctx *ctx0, *ctx1;
 	if((ctx0 = minethd_alloc_ctx()) == nullptr)
 		return false;
+	if ((ctx1 = minethd_alloc_ctx()) == nullptr)
+		return false;
 
+	std::string prev_input;
+	std::string input;
+	enum { HASH_SIZE = 32 };
+	char reference_hash[3][HASH_SIZE];
+	char reference_hash_dbl[3][HASH_SIZE * 2];
 	while (!f.eof())
 	{
-		std::string input;
+		prev_input = input;
 		std::getline(f, input);
 		if (input.empty())
 		{
 			continue;
 		}
 
-		enum { HASH_SIZE = 32 };
 		for (int i = 0; i < 3; ++i)
 		{
-			char hash[32];
+			char hash[HASH_SIZE];
+			char hash_dbl[HASH_SIZE * 2];
 			cn_hash_fun hash_fun;
+			cn_hash_fun_dbl hash_fun_dbl;
 			if (i == 0)
+			{
 				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, false, false, 0);
+				hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, false, false, 0);
+			}
 			else if (i == 2)
+			{
 				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, true, true, 0);
+				hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, true, true, 0);
+			}
 
 			std::string output;
 			std::getline(f, output);
@@ -299,17 +313,31 @@ bool minethd::self_test()
 			}
 
 			hash_fun(input.c_str(), input.length(), hash, ctx0);
-
-			char reference_hash[HASH_SIZE];
-			for (int j = 0; j < HASH_SIZE; ++j)
+			if (!prev_input.empty())
 			{
-				reference_hash[j] = static_cast<char>(std::stoul(output.substr(j * 2, 2), 0, 16));
+				hash_fun_dbl(prev_input.c_str(), prev_input.length(), hash_dbl, input.c_str(), input.length(), hash_dbl + HASH_SIZE, ctx0, ctx1);
 			}
 
-			if (memcmp(hash, reference_hash, HASH_SIZE) != 0)
+			memcpy(reference_hash_dbl[i], reference_hash[i], HASH_SIZE);
+			for (int j = 0; j < HASH_SIZE; ++j)
+			{
+				reference_hash[i][j] = static_cast<char>(std::stoul(output.substr(j * 2, 2), 0, 16));
+			}
+			memcpy(reference_hash_dbl[i] + HASH_SIZE, reference_hash[i], HASH_SIZE);
+
+			if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 			{
 				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
 				return false;
+			}
+
+			if (!prev_input.empty())
+			{
+				if (memcmp(hash_dbl, reference_hash_dbl[i], HASH_SIZE * 2) != 0)
+				{
+					printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant %d) failed.", i);
+					return false;
+				}
 			}
 
 			if (jconf::inst()->HaveHardwareAes() && (i == 2))
@@ -320,7 +348,7 @@ bool minethd::self_test()
 					cn_hash_fun hash_fun = func_selector(true, true, true, true, j);
 					hash_fun(input.c_str(), input.length(), hash, ctx0);
 
-					if (memcmp(hash, reference_hash, HASH_SIZE) != 0)
+					if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 					{
 						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant 2, asm version %d) failed.", j);
 						return false;
@@ -575,32 +603,50 @@ void minethd::work_main()
 	cryptonight_free_ctx(ctx);
 }
 
-minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefetch)
+minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int /*asm_version*/)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
-	// Digit order SOFT_AES, NO_PREFETCH
+	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-	static const cn_hash_fun_dbl func_table[4] = {
-		cryptonight_double_hash<0x80000, MEMORY, false, false>,
-		cryptonight_double_hash<0x80000, MEMORY, false, true>,
-		cryptonight_double_hash<0x80000, MEMORY, true, false>,
-		cryptonight_double_hash<0x80000, MEMORY, true, true>
+	static const cn_hash_fun_dbl func_table[16] = {
+		// Original cryptonight with shuffle and division
+		cryptonight_double_hash<0x80000, MEMORY, false, false, true, true>,
+		cryptonight_double_hash<0x80000, MEMORY, false, true, true, true>,
+		cryptonight_double_hash<0x80000, MEMORY, true, false, true, true>,
+		cryptonight_double_hash<0x80000, MEMORY, true, true, true, true>,
+
+		// Original cryptonight with division
+		cryptonight_double_hash<0x80000, MEMORY, false, false, false, true>,
+		cryptonight_double_hash<0x80000, MEMORY, false, true, false, true>,
+		cryptonight_double_hash<0x80000, MEMORY, true, false, false, true>,
+		cryptonight_double_hash<0x80000, MEMORY, true, true, false, true>,
+
+		// Original cryptonight with shuffle
+		cryptonight_double_hash<0x80000, MEMORY, false, false, true, false>,
+		cryptonight_double_hash<0x80000, MEMORY, false, true, true, false>,
+		cryptonight_double_hash<0x80000, MEMORY, true, false, true, false>,
+		cryptonight_double_hash<0x80000, MEMORY, true, true, true, false>,
+
+		// Original cryptonight
+		cryptonight_double_hash<0x80000, MEMORY, false, false, false, false>,
+		cryptonight_double_hash<0x80000, MEMORY, false, true, false, false>,
+		cryptonight_double_hash<0x80000, MEMORY, true, false, false, false>,
+		cryptonight_double_hash<0x80000, MEMORY, true, true, false, false>,
 	};
 
-	std::bitset<2> digit;
+	std::bitset<4> digit;
 	digit.set(0, !bNoPrefetch);
 	digit.set(1, !bHaveAes);
+	digit.set(2, !bShuffle);
+	digit.set(3, !bIntMath);
 
 	return func_table[digit.to_ulong()];
 }
 
 void minethd::double_work_main()
 {
-	printer::inst()->print_msg(L0, "low_power_mode=true is not implemented in this benchmark yet");
-	abort();
-
 	if(affinity >= 0) //-1 means no affinity
 		pin_thd_affinity();
 
@@ -615,14 +661,14 @@ void minethd::double_work_main()
 	uint32_t iNonce;
 	job_result res;
 
-	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch);
+	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, 0);
 	ctx0 = minethd_alloc_ctx();
 	ctx1 = minethd_alloc_ctx();
 
 	piHashVal0 = (uint64_t*)(bDoubleHashOut + 24);
 	piHashVal1 = (uint64_t*)(bDoubleHashOut + 32 + 24);
 	piNonce0 = (uint32_t*)(bDoubleWorkBlob + 39);
-	piNonce1 = nullptr;
+	piNonce1 = (uint32_t*)(bDoubleWorkBlob + oWork.iWorkSize + 39);
 
 	iConsumeCnt++;
 
@@ -666,7 +712,7 @@ void minethd::double_work_main()
 			*piNonce0 = ++iNonce;
 			*piNonce1 = ++iNonce;
 
-			hash_fun(bDoubleWorkBlob, oWork.iWorkSize, bDoubleHashOut, ctx0, ctx1);
+			hash_fun(bDoubleWorkBlob, oWork.iWorkSize, bDoubleHashOut, bDoubleWorkBlob + oWork.iWorkSize, oWork.iWorkSize, bDoubleHashOut + 32, ctx0, ctx1);
 
 			if (*piHashVal0 < oWork.iTarget)
 				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce-1, bDoubleHashOut), oWork.iPoolId));
