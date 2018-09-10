@@ -487,20 +487,18 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 static FORCEINLINE void int_math_v2_double_hash(__m128i& division_result, __m128i& sqrt_result, __m128i cx0, __m128i cx1)
 {
-	const __m128d z = _mm_setzero_pd();
-
 	const __m128i sqrt_result2 = _mm_add_epi64(_mm_slli_epi64(sqrt_result, 1), _mm_unpacklo_epi64(cx0, cx1));
 	const uint32_t d0 = _mm_cvtsi128_si64(sqrt_result2) | 0x80000001UL;
 	const uint32_t d1 = _mm_cvtsi128_si64(_mm_srli_si128(sqrt_result2, 8)) | 0x80000001UL;
 
 	const uint64_t cx01 = _mm_cvtsi128_si64(_mm_srli_si128(cx0, 8));
 	const uint64_t cx11 = _mm_cvtsi128_si64(_mm_srli_si128(cx1, 8));
-	__m128d x = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, (cx01 + 1) >> 1), _mm_cvtsi64_sd(z, (cx11 + 1) >> 1));
-	__m128d y = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, d0), _mm_cvtsi64_sd(z, d1));
+	__m128d x = _mm_unpacklo_pd(_mm_cvtsi64_sd(_mm_setzero_pd(), (cx01 + 1) >> 1), _mm_cvtsi64_sd(_mm_setzero_pd(), (cx11 + 1) >> 1));
+	__m128d y = _mm_unpacklo_pd(_mm_cvtsi64_sd(_mm_setzero_pd(), d0), _mm_cvtsi64_sd(_mm_setzero_pd(), d1));
 
 	__m128d result = _mm_div_pd(x, y);
-	result = _mm_add_pd(result, result);
-	//result = _mm_castsi128_pd(_mm_add_epi64(_mm_castpd_si128(result), _mm_set_epi64x(1ULL << 52, 1ULL << 52)));
+	//result = _mm_add_pd(result, result);
+	result = _mm_castsi128_pd(_mm_add_epi64(_mm_castpd_si128(result), _mm_set_epi64x(1ULL << 52, 1ULL << 52)));
 
 	uint64_t q0 = _mm_cvttsd_si64(result);
 	uint64_t q1 = _mm_cvttsd_si64(_mm_castsi128_pd(_mm_srli_si128(_mm_castpd_si128(result), 8)));
@@ -531,6 +529,8 @@ static FORCEINLINE void int_math_v2_double_hash(__m128i& division_result, __m128
 	int_sqrt_v2_fixup<true>(r1, _mm_cvtsi128_si64(_mm_srli_si128(sqrt_input, 8)));
 	sqrt_result = _mm_set_epi64x(r1, r0);
 }
+
+//extern uint64_t t1, t2;
 
 template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool INT_MATH>
 void cryptonight_double_hash(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
@@ -570,34 +570,31 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 	std::fesetround(FE_UPWARD);
 #endif
 
+	//t1 = __rdtsc();
+
 	// Optim - 90% time boundary
 	for (size_t i = 0; i < ITERATIONS; i++)
 	{
 		__m128i cx0 = _mm_load_si128((__m128i *)&l0[idx01]);
-		__m128i cx1 = _mm_load_si128((__m128i *)&l1[idx11]);
-
 		const __m128i ax0 = _mm_set_epi64x(axh0, axl0);
-		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
-
 		if (SOFT_AES)
 		{
 			cx0 = soft_aesenc(cx0, ax0);
-			cx1 = soft_aesenc(cx1, ax1);
 		}
 		else
 		{
 			cx0 = _mm_aesenc_si128(cx0, ax0);
-			cx1 = _mm_aesenc_si128(cx1, ax1);
 		}
 
 		if (SHUFFLE)
 		{
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x10]);
-			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x20]);
-			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x30]);
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x10], _mm_add_epi64(chunk3, bx01));
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x20], _mm_add_epi64(chunk1, bx00));
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x30], _mm_add_epi64(chunk2, ax0));
+			uint32_t k = idx01 ^ 0x10;
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[k]); k ^= 0x30;
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[k]);
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk1, bx00)); k ^= 0x10;
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[k]);
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk2, ax0)); k ^= 0x20;
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk3, bx01));
 		}
 
 		_mm_store_si128((__m128i *)&l0[idx01], _mm_xor_si128(bx00, cx0));
@@ -607,14 +604,26 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		if(PREFETCH)
 			_mm_prefetch((const char*)&l0[idx01], _MM_HINT_T0);
 
+		__m128i cx1 = _mm_load_si128((__m128i *)&l1[idx11]);
+		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
+		if (SOFT_AES)
+		{
+			cx1 = soft_aesenc(cx1, ax1);
+		}
+		else
+		{
+			cx1 = _mm_aesenc_si128(cx1, ax1);
+		}
+
 		if (SHUFFLE)
 		{
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x10]);
-			const __m128i chunk2 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x20]);
-			const __m128i chunk3 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x30]);
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x10], _mm_add_epi64(chunk3, bx11));
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x20], _mm_add_epi64(chunk1, bx10));
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x30], _mm_add_epi64(chunk2, ax1));
+			uint32_t k = idx11 ^ 0x10;
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l1[k]); k ^= 0x30;
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l1[k]);
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk1, bx10)); k ^= 0x10;
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l1[k]);
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk2, ax1)); k ^= 0x20;
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk3, bx11));
 		}
 
 		_mm_store_si128((__m128i *)&l1[idx11], _mm_xor_si128(bx10, cx1));
@@ -630,12 +639,13 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 
 		if (SHUFFLE)
 		{
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x10]);
-			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x20]);
-			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x30]);
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x10], _mm_add_epi64(chunk3, bx01));
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x20], _mm_add_epi64(chunk1, bx00));
-			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x30], _mm_add_epi64(chunk2, ax0));
+			uint32_t k = idx01 ^ 0x10;
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[k]); k ^= 0x30;
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[k]);
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk1, bx00)); k ^= 0x10;
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[k]);
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk2, ax0)); k ^= 0x20;
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk3, bx01));
 		}
 
 		if (INT_MATH)
@@ -672,12 +682,13 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 
 		if (SHUFFLE)
 		{
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x10]);
-			const __m128i chunk2 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x20]);
-			const __m128i chunk3 = _mm_load_si128((__m128i *)&l1[idx11 ^ 0x30]);
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x10], _mm_add_epi64(chunk3, bx11));
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x20], _mm_add_epi64(chunk1, bx10));
-			_mm_store_si128((__m128i *)&l1[idx11 ^ 0x30], _mm_add_epi64(chunk2, ax1));
+			uint32_t k = idx11 ^ 0x10;
+			const __m128i chunk1 = _mm_load_si128((__m128i *)&l1[k]); k ^= 0x30;
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l1[k]);
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk1, bx10)); k ^= 0x10;
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l1[k]);
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk2, ax1)); k ^= 0x20;
+			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk3, bx11));
 		}
 
 		axl1 += hi;
@@ -689,6 +700,9 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		idx10 = axl1;
 		idx11 = idx10 & 0x1FFFF0;
 
+		if (PREFETCH)
+			_mm_prefetch((const char*)&l1[idx11], _MM_HINT_T0);
+
 		if (SHUFFLE)
 		{
 			bx01 = bx00;
@@ -696,10 +710,9 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		}
 		bx00 = cx0;
 		bx10 = cx1;
-
-		if(PREFETCH)
-			_mm_prefetch((const char*)&l1[idx11], _MM_HINT_T0);
 	}
+
+	//t2 = __rdtsc();
 
 	// Optim - 90% time boundary
 	cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
