@@ -292,33 +292,34 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 
 #ifdef __GNUC__
 #define LIKELY(X) __builtin_expect(X, 1)
+#define UNLIKELY(X) __builtin_expect(X, 0)
 #define FORCEINLINE __attribute__((always_inline)) inline
 #else
 #define LIKELY(X) X
+#define UNLIKELY(X) X
 #define FORCEINLINE __forceinline
 #endif
 
-static FORCEINLINE uint64_t int_sqrt_v2(uint64_t n0)
+template<bool IS_PGO>
+static FORCEINLINE void int_sqrt_v2_fixup(uint64_t& r, uint64_t n0)
 {
-	__m128d x = _mm_castsi128_pd(_mm_add_epi64(_mm_cvtsi64_si128(n0 >> 12), _mm_set_epi64x(0, 1023ULL << 52)));
-	x = _mm_sqrt_sd(_mm_setzero_pd(), x);
-	uint64_t r = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_castpd_si128(x)));
-
-// This works well only with profile guided optimizations
-#ifdef PGO_BUILD
-	// _mm_sqrt_sd has 52 bits of precision while we need only 33 bits
-	// It's very likely that fix up step is not needed
-	if (LIKELY(r & 524287))
+	// This works well only with profile guided optimizations
+	if (IS_PGO)
 	{
-		return r >> 19;
-	}
+		// _mm_sqrt_sd has 52 bits of precision while we need only 33 bits
+		// It's very likely that fix up step is not needed
+		if (LIKELY(r & 524287))
+		{
+			r >>= 19;
+			return;
+		}
 
-	// The execution gets here only when r ends with 19 zero bits
-	// One would expect it to happen in 1 of 524,288 iterations (once per hash)
-	// but the actual number is 1 of ~470,000 iterations (~1.1155 times per hash)
-	// due to non-linearity of the square root function
-	--r;
-#endif
+		// The execution gets here only when r ends with 19 zero bits
+		// One would expect it to happen in 1 of 524,288 iterations (once per hash)
+		// but the actual number is 1 of ~470,000 iterations (~1.1155 times per hash)
+		// due to non-linearity of the square root function
+		--r;
+	}
 
 	const uint64_t s = r >> 20;
 	r >>= 19;
@@ -331,7 +332,20 @@ static FORCEINLINE uint64_t int_sqrt_v2(uint64_t n0)
 	// Fallback to simpler code
 	if (x2 < n0) ++r;
 #endif
+}
 
+static FORCEINLINE uint64_t int_sqrt_v2(uint64_t n0)
+{
+	__m128d x = _mm_castsi128_pd(_mm_add_epi64(_mm_cvtsi64_si128(n0 >> 12), _mm_set_epi64x(0, 1023ULL << 52)));
+	x = _mm_sqrt_sd(_mm_setzero_pd(), x);
+	uint64_t r = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_castpd_si128(x)));
+	int_sqrt_v2_fixup<
+#ifdef PGO_BUILD
+		true
+#else
+		false
+#endif
+	>(r, n0);
 	return r;
 }
 
@@ -471,6 +485,64 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
 
+static FORCEINLINE void int_math_v2_double_hash(__m128i& division_result, __m128i& sqrt_result, __m128i cx0, __m128i cx1)
+{
+	const __m128d z = _mm_setzero_pd();
+
+	const __m128i sqrt_result2 = _mm_add_epi64(_mm_slli_epi64(sqrt_result, 1), _mm_unpacklo_epi64(cx0, cx1));
+	const uint32_t d0 = _mm_cvtsi128_si64(sqrt_result2) | 0x80000001UL;
+	const uint32_t d1 = _mm_cvtsi128_si64(_mm_srli_si128(sqrt_result2, 8)) | 0x80000001UL;
+
+	enum
+	{
+#ifdef PGO_BUILD
+		cx_shift = 1,
+		q_shift = 0,
+#else
+		cx_shift = 0,
+		q_shift = 1,
+#endif
+	};
+
+	const uint64_t cx01 = _mm_cvtsi128_si64(_mm_srli_si128(cx0, 8));
+	const uint64_t cx11 = _mm_cvtsi128_si64(_mm_srli_si128(cx1, 8));
+	__m128d x = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, (cx01 + cx_shift) >> 1), _mm_cvtsi64_sd(z, (cx11 + cx_shift) >> 1));
+	__m128d y = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, d0), _mm_cvtsi64_sd(z, d1));
+
+	__m128d result = _mm_div_pd(x, y);
+	result = _mm_add_pd(result, result);
+	//result = _mm_castsi128_pd(_mm_add_epi64(_mm_castpd_si128(result), _mm_set_epi64x(1ULL << 52, 1ULL << 52)));
+
+	uint64_t q0 = _mm_cvttsd_si64(result) + q_shift;
+	uint64_t q1 = _mm_cvttsd_si64(_mm_castsi128_pd(_mm_srli_si128(_mm_castpd_si128(result), 8))) + q_shift;
+
+	uint64_t r0 = cx01 - d0 * q0;
+	if (UNLIKELY(int64_t(r0) < 0))
+	{
+		--q0;
+		r0 += d0;
+	}
+	uint64_t r1 = cx11 - d1 * q1;
+	if (UNLIKELY(int64_t(r1) < 0))
+	{
+		--q1;
+		r1 += d1;
+	}
+
+	division_result = _mm_set_epi32(r1, q1, r0, q0);
+
+	__m128i sqrt_input = _mm_add_epi64(_mm_unpacklo_epi64(cx0, cx1), division_result);
+	x = _mm_castsi128_pd(_mm_add_epi64(_mm_srli_epi64(sqrt_input, 12), _mm_set_epi64x(1023ULL << 52, 1023ULL << 52)));
+
+	x = _mm_sqrt_pd(x);
+
+	r0 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_castpd_si128(x)));
+	int_sqrt_v2_fixup<true>(r0, _mm_cvtsi128_si64(sqrt_input));
+	r1 = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_srli_si128(_mm_castpd_si128(x), 8)));
+	int_sqrt_v2_fixup<true>(r1, _mm_cvtsi128_si64(_mm_srli_si128(sqrt_input, 8)));
+	sqrt_result = _mm_set_epi64x(r1, r0);
+}
+
 template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool INT_MATH>
 void cryptonight_double_hash(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
 {
@@ -500,35 +572,34 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 	uint64_t idx01 = idx00 & 0x1FFFF0;
 	uint64_t idx11 = idx10 & 0x1FFFF0;
 
-	__m128i division_result_xmm0 = _mm_cvtsi64_si128(h0[12]);
-	__m128i division_result_xmm1 = _mm_cvtsi64_si128(h1[12]);
-	__m128i sqrt_result_xmm0 = _mm_cvtsi64_si128(h0[13]);
-	__m128i sqrt_result_xmm1 = _mm_cvtsi64_si128(h1[13]);
+	__m128i division_result_xmm = _mm_unpacklo_epi64(_mm_cvtsi64_si128(h0[12]), _mm_cvtsi64_si128(h1[12]));
+	__m128i sqrt_result_xmm = _mm_unpacklo_epi64(_mm_cvtsi64_si128(h0[13]), _mm_cvtsi64_si128(h1[13]));
 
-#ifdef PGO_BUILD
 #ifdef _MSC_VER
 	_control87(RC_UP, MCW_RC);
 #else
 	std::fesetround(FE_UPWARD);
-#endif
-#else
-#ifdef _MSC_VER
-	_control87(RC_DOWN, MCW_RC);
-#else
-	std::fesetround(FE_TOWARDZERO);
-#endif
 #endif
 
 	// Optim - 90% time boundary
 	for (size_t i = 0; i < ITERATIONS; i++)
 	{
 		__m128i cx0 = _mm_load_si128((__m128i *)&l0[idx01]);
+		__m128i cx1 = _mm_load_si128((__m128i *)&l1[idx11]);
 
 		const __m128i ax0 = _mm_set_epi64x(axh0, axl0);
-		if(SOFT_AES)
+		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
+
+		if (SOFT_AES)
+		{
 			cx0 = soft_aesenc(cx0, ax0);
+			cx1 = soft_aesenc(cx1, ax1);
+		}
 		else
+		{
 			cx0 = _mm_aesenc_si128(cx0, ax0);
+			cx1 = _mm_aesenc_si128(cx1, ax1);
+		}
 
 		if (SHUFFLE)
 		{
@@ -546,14 +617,6 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 
 		if(PREFETCH)
 			_mm_prefetch((const char*)&l0[idx01], _MM_HINT_T0);
-
-		__m128i cx1 = _mm_load_si128((__m128i *)&l1[idx11]);
-
-		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
-		if(SOFT_AES)
-			cx1 = soft_aesenc(cx1, ax1);
-		else
-			cx1 = _mm_aesenc_si128(cx1, ax1);
 
 		if (SHUFFLE)
 		{
@@ -576,21 +639,6 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		cl = ((uint64_t*)&l0[idx01])[0];
 		ch = ((uint64_t*)&l0[idx01])[1];
 
-		if (INT_MATH)
-		{
-			const uint64_t sqrt_result0 = _mm_cvtsi128_si64(sqrt_result_xmm0);
-
-			cl ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm0)) ^ (sqrt_result0 << 32);
-			const uint32_t d = (idx00 + (sqrt_result0 << 1)) | 0x80000001UL;
-
-			const uint64_t cx01 = _mm_cvtsi128_si64(_mm_srli_si128(cx0, 8));
-			const uint64_t division_result = static_cast<uint32_t>(cx01 / d) + ((cx01 % d) << 32);
-			division_result_xmm0 = _mm_cvtsi64_si128(static_cast<int64_t>(division_result));
-			sqrt_result_xmm0 = _mm_cvtsi64_si128(int_sqrt_v2(idx00 + division_result));
-		}
-
-		lo = _umul128(idx00, cl, &hi);
-
 		if (SHUFFLE)
 		{
 			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx01 ^ 0x10]);
@@ -600,6 +648,14 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x20], _mm_add_epi64(chunk1, bx00));
 			_mm_store_si128((__m128i *)&l0[idx01 ^ 0x30], _mm_add_epi64(chunk2, ax0));
 		}
+
+		if (INT_MATH)
+		{
+			const uint64_t sqrt_result0 = _mm_cvtsi128_si64(sqrt_result_xmm);
+			cl ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm)) ^ (sqrt_result0 << 32);
+		}
+
+		lo = _umul128(idx00, cl, &hi);
 
 		axl0 += hi;
 		axh0 += lo;
@@ -618,15 +674,9 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 
 		if (INT_MATH)
 		{
-			const uint64_t sqrt_result1 = _mm_cvtsi128_si64(sqrt_result_xmm1);
-
-			cl ^= static_cast<uint64_t>(_mm_cvtsi128_si64(division_result_xmm1)) ^ (sqrt_result1 << 32);
-			const uint32_t d = (idx10 + (sqrt_result1 << 1)) | 0x80000001UL;
-
-			const uint64_t cx11 = _mm_cvtsi128_si64(_mm_srli_si128(cx1, 8));
-			const uint64_t division_result = static_cast<uint32_t>(cx11 / d) + ((cx11 % d) << 32);
-			division_result_xmm1 = _mm_cvtsi64_si128(static_cast<int64_t>(division_result));
-			sqrt_result_xmm1 = _mm_cvtsi64_si128(int_sqrt_v2(idx10 + division_result));
+			const uint64_t sqrt_result1 = _mm_cvtsi128_si64(_mm_srli_si128(sqrt_result_xmm, 8));
+			cl ^= static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_srli_si128(division_result_xmm, 8))) ^ (sqrt_result1 << 32);
+			int_math_v2_double_hash(division_result_xmm, sqrt_result_xmm, cx0, cx1);
 		}
 
 		lo = _umul128(idx10, cl, &hi);
