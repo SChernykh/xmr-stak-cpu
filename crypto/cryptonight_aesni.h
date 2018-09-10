@@ -493,28 +493,17 @@ static FORCEINLINE void int_math_v2_double_hash(__m128i& division_result, __m128
 	const uint32_t d0 = _mm_cvtsi128_si64(sqrt_result2) | 0x80000001UL;
 	const uint32_t d1 = _mm_cvtsi128_si64(_mm_srli_si128(sqrt_result2, 8)) | 0x80000001UL;
 
-	enum
-	{
-#ifdef PGO_BUILD
-		cx_shift = 1,
-		q_shift = 0,
-#else
-		cx_shift = 0,
-		q_shift = 1,
-#endif
-	};
-
 	const uint64_t cx01 = _mm_cvtsi128_si64(_mm_srli_si128(cx0, 8));
 	const uint64_t cx11 = _mm_cvtsi128_si64(_mm_srli_si128(cx1, 8));
-	__m128d x = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, (cx01 + cx_shift) >> 1), _mm_cvtsi64_sd(z, (cx11 + cx_shift) >> 1));
+	__m128d x = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, (cx01 + 1) >> 1), _mm_cvtsi64_sd(z, (cx11 + 1) >> 1));
 	__m128d y = _mm_unpacklo_pd(_mm_cvtsi64_sd(z, d0), _mm_cvtsi64_sd(z, d1));
 
 	__m128d result = _mm_div_pd(x, y);
 	result = _mm_add_pd(result, result);
 	//result = _mm_castsi128_pd(_mm_add_epi64(_mm_castpd_si128(result), _mm_set_epi64x(1ULL << 52, 1ULL << 52)));
 
-	uint64_t q0 = _mm_cvttsd_si64(result) + q_shift;
-	uint64_t q1 = _mm_cvttsd_si64(_mm_castsi128_pd(_mm_srli_si128(_mm_castpd_si128(result), 8))) + q_shift;
+	uint64_t q0 = _mm_cvttsd_si64(result);
+	uint64_t q1 = _mm_cvttsd_si64(_mm_castsi128_pd(_mm_srli_si128(_mm_castpd_si128(result), 8)));
 
 	uint64_t r0 = cx01 - d0 * q0;
 	if (UNLIKELY(int64_t(r0) < 0))
