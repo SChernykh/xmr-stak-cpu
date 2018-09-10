@@ -598,6 +598,9 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefe
 
 void minethd::double_work_main()
 {
+	printer::inst()->print_msg(L0, "low_power_mode=true is not implemented in this benchmark yet");
+	abort();
+
 	if(affinity >= 0) //-1 means no affinity
 		pin_thd_affinity();
 
