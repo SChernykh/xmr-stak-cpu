@@ -60,6 +60,8 @@ Good news for CPU and GPU is that division and square roots can be added to the 
 
 # Performance
 
+**Update 2018-09-13: my latest test shows that AMD Radeon RX 560 can do 98.5% of its current Cryptonight hashrate with strided_index=2, mem_chunk=2, so all GPU numbers below are now obsolete. Hopefully, all GPUs will be able to retain at least 95% of their current hashrate**
+
 Overall, it seems that all Radeon cards will be in 85-90+% range of their CryptonightV1 performance in the end after the community has more time to get familiar with these mods and come up with tuning manuals. All GeForce cards will be in 90-95+% range of their CryptonightV1 performance, so their relative performance will improve a few percent comparing to Radeons. And there is always some room for further performance improvement in the mining software itself, so overall network hashrate will only drop 5-10%.
 
 On the other side, ASIC/FPGA which use external memory for scratchpad will get 4 times slower due to increased bandwidth usage. ASIC/FPGA which use on-chip memory for scratchpad will get ~15 times slower because of high latencies introduced with division and square root calculations: they just don't have enough on-chip memory to hide these latencies with many parallel Cryptonight calculations.
