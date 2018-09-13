@@ -133,6 +133,15 @@ INT_MATH | 65.9 H/s|96.5%
 SHUFFLE | 67.3 H/s|98.5%
 Both mods | 65.0 H/s|95.2%
 
+**Quad Xeon E7-8837 HP DL580 G7 Server**, 16 single + 16 double threads
+
+Mod|Hashrate|Performance level
+---|--------|-----------------
+\- | 1654.2 H/s|100.0%
+INT_MATH | 1586.3 H/s|95.9%
+SHUFFLE | 1606.8 H/s|97.1%
+Both mods | 1554.4 H/s|94.0%
+
 GPU performance was tested using the code from this repository: https://github.com/SChernykh/xmr-stak-amd
 
 ### XMR-STAK used is an old version, so don't expect the same numbers that you have on your mining rigs. What's important here are relative numbers of original and modified Cryptonight versions.
