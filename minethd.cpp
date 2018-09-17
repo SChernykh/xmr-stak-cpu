@@ -495,15 +495,9 @@ void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* outpu
 	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
 	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->hash_state, (__m128i*)ctx1->long_state);
 
-#ifdef _MSC_VER
-	_control87(RC_UP, MCW_RC);
-#else
-	std::fesetround(FE_UPWARD);
-#endif
-
-	t1 = __rdtsc();
+	//t1 = __rdtsc();
 	cnv2_double_mainloop_sandybridge_asm(ctx0, ctx1);
-	t2 = __rdtsc();
+	//t2 = __rdtsc();
 
 	// Optim - 90% time boundary
 	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);

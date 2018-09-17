@@ -8,6 +8,11 @@
 	push	r14
 	push	r15
 	sub	rsp, 184
+
+	stmxcsr DWORD PTR [rsp+272]
+	mov DWORD PTR [rsp+276], 24448
+	ldmxcsr DWORD PTR [rsp+276]
+
 	mov	r13, QWORD PTR [rcx+224]
 	mov	r9, rdx
 	mov	r10, QWORD PTR [rcx+32]
@@ -313,6 +318,7 @@ sqrt_fix_2_ret_sandybridge:
 	dec r14d
 	jne	main_loop_double_sandybridge
 
+	ldmxcsr DWORD PTR [rsp+272]
 	movaps	xmm13, XMMWORD PTR [rsp+48]
 	lea	r11, QWORD PTR [rsp+184]
 	movaps	xmm6, XMMWORD PTR [r11-24]
