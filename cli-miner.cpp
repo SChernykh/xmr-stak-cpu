@@ -82,16 +82,40 @@ int main(int argc, char *argv[])
 
 	minethd::self_test();
 	do_benchmark();
+#ifndef PERFORMANCE_TUNING
 	win_exit();
+#endif
 	return 0;
 }
 
+#ifdef PERFORMANCE_TUNING
+extern uint64_t min_cycles;
+#endif
+
 void do_benchmark()
 {
+	int benchmark_time = 60;
+
+#ifdef PERFORMANCE_TUNING
+	LARGE_INTEGER f, t1, t2;
+	QueryPerformanceFrequency(&f);
+	QueryPerformanceCounter(&t1);
+	uint64_t tsc1 = __rdtsc();
+	uint64_t tsc2;
+	do
+	{
+		QueryPerformanceCounter(&t2);
+		tsc2 = __rdtsc();
+	} while (t2.QuadPart - t1.QuadPart < f.QuadPart);
+	double rdtsc_speed = static_cast<double>(tsc2 - tsc1) / 1e9 / (t2.QuadPart - t1.QuadPart) * f.QuadPart;
+	printer::inst()->print_msg(L0, "rdtsc speed: %.3f GHz", rdtsc_speed);
+	benchmark_time = 10;
+#endif
+
 	using namespace std::chrono;
 	std::vector<minethd*>* pvThreads;
 
-	printer::inst()->print_msg(L0, "Running a 60 second benchmark...");
+	printer::inst()->print_msg(L0, "Running a %d second benchmark...", benchmark_time);
 
 	uint8_t work[76] = {0};
 	minethd::miner_work oWork = minethd::miner_work("", work, sizeof(work), 0, 0, false, 0);
@@ -99,7 +123,7 @@ void do_benchmark()
 
 	uint64_t iStartStamp = time_point_cast<milliseconds>(high_resolution_clock::now()).time_since_epoch().count();
 
-	std::this_thread::sleep_for(std::chrono::seconds(60));
+	std::this_thread::sleep_for(std::chrono::seconds(benchmark_time));
 
 	oWork = minethd::miner_work();
 	minethd::switch_work(oWork);
@@ -115,4 +139,7 @@ void do_benchmark()
 	}
 
 	printer::inst()->print_msg(L0, "Total: %.1f H/S", fTotalHps);
+#ifdef PERFORMANCE_TUNING
+	printer::inst()->print_msg(L0, "%.2f ns per iteration", min_cycles / 524288.0 / rdtsc_speed);
+#endif
 }

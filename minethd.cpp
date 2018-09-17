@@ -495,9 +495,13 @@ void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* outpu
 	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
 	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->hash_state, (__m128i*)ctx1->long_state);
 
-	//t1 = __rdtsc();
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
 	cnv2_double_mainloop_sandybridge_asm(ctx0, ctx1);
-	//t2 = __rdtsc();
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
 
 	// Optim - 90% time boundary
 	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
@@ -694,8 +698,10 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefe
 	return func_table[digit.to_ulong()];
 }
 
-//uint64_t t1, t2;
-//uint64_t min_cycles = uint64_t(-1);
+#ifdef PERFORMANCE_TUNING
+uint64_t t1, t2;
+uint64_t min_cycles = uint64_t(-1);
+#endif
 
 void minethd::double_work_main()
 {
@@ -765,10 +771,12 @@ void minethd::double_work_main()
 			*piNonce1 = ++iNonce;
 
 			hash_fun(bDoubleWorkBlob, oWork.iWorkSize, bDoubleHashOut, bDoubleWorkBlob + oWork.iWorkSize, oWork.iWorkSize, bDoubleHashOut + 32, ctx0, ctx1);
-			//if (t2 - t1 < min_cycles)
-			//{
-			//	min_cycles = t2 - t1;
-			//}
+#ifdef PERFORMANCE_TUNING
+			if (t2 - t1 < min_cycles)
+			{
+				min_cycles = t2 - t1;
+			}
+#endif
 
 			if (*piHashVal0 < oWork.iTarget)
 				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce-1, bDoubleHashOut), oWork.iPoolId));
