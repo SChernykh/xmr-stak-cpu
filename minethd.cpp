@@ -346,12 +346,26 @@ bool minethd::self_test()
 				{
 					char hash[32];
 					cn_hash_fun hash_fun = func_selector(true, true, true, true, j);
+					cn_hash_fun_dbl hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, true, true, j);
+
 					hash_fun(input.c_str(), input.length(), hash, ctx0);
+					if (!prev_input.empty())
+					{
+						hash_fun_dbl(prev_input.c_str(), prev_input.length(), hash_dbl, input.c_str(), input.length(), hash_dbl + HASH_SIZE, ctx0, ctx1);
+					}
 
 					if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 					{
 						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant 2, asm version %d) failed.", j);
 						return false;
+					}
+					if (!prev_input.empty())
+					{
+						if (memcmp(hash_dbl, reference_hash_dbl[i], HASH_SIZE * 2) != 0)
+						{
+							printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant 2, asm version %d) failed.", j);
+							return false;
+						}
 					}
 				}
 			}
@@ -454,6 +468,7 @@ void minethd::consume_work()
 
 extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
+extern "C" void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
 
 template<int asm_version>
 void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
@@ -469,6 +484,37 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	cn_implode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+}
+
+void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
+{
+	keccak((const uint8_t *)input1, len1, ctx0->hash_state, 200);
+	keccak((const uint8_t *)input2, len2, ctx1->hash_state, 200);
+
+	// Optim - 99% time boundary
+	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->hash_state, (__m128i*)ctx1->long_state);
+
+#ifdef _MSC_VER
+	_control87(RC_UP, MCW_RC);
+#else
+	std::fesetround(FE_UPWARD);
+#endif
+
+	t1 = __rdtsc();
+	cnv2_double_mainloop_sandybridge_asm(ctx0, ctx1);
+	t2 = __rdtsc();
+
+	// Optim - 90% time boundary
+	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->long_state, (__m128i*)ctx1->hash_state);
+
+	// Optim - 99% time boundary
+
+	keccakf((uint64_t*)ctx0->hash_state, 24);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output1);
+	keccakf((uint64_t*)ctx1->hash_state, 24);
+	extra_hashes[ctx1->hash_state[0] & 3](ctx1->hash_state, 200, (char*)output2);
 }
 
 minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
@@ -607,12 +653,17 @@ void minethd::work_main()
 	cryptonight_free_ctx(ctx);
 }
 
-minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int /*asm_version*/)
+minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
+
+	if (bHaveAes && bShuffle && bIntMath && (asm_version > 0))
+	{
+		return cryptonight_double_hash_v2_asm;
+	}
 
 	static const cn_hash_fun_dbl func_table[16] = {
 		// Original cryptonight with shuffle and division
@@ -649,6 +700,9 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefe
 	return func_table[digit.to_ulong()];
 }
 
+//uint64_t t1, t2;
+//uint64_t min_cycles = uint64_t(-1);
+
 void minethd::double_work_main()
 {
 	if(affinity >= 0) //-1 means no affinity
@@ -665,7 +719,7 @@ void minethd::double_work_main()
 	uint32_t iNonce;
 	job_result res;
 
-	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, 0);
+	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, iAsmVersion);
 	ctx0 = minethd_alloc_ctx();
 	ctx1 = minethd_alloc_ctx();
 
@@ -717,6 +771,10 @@ void minethd::double_work_main()
 			*piNonce1 = ++iNonce;
 
 			hash_fun(bDoubleWorkBlob, oWork.iWorkSize, bDoubleHashOut, bDoubleWorkBlob + oWork.iWorkSize, oWork.iWorkSize, bDoubleHashOut + 32, ctx0, ctx1);
+			//if (t2 - t1 < min_cycles)
+			//{
+			//	min_cycles = t2 - t1;
+			//}
 
 			if (*piHashVal0 < oWork.iTarget)
 				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce-1, bDoubleHashOut), oWork.iPoolId));
