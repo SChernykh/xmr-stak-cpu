@@ -470,24 +470,32 @@ extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
 
+#ifdef PERFORMANCE_TUNING
+uint64_t t1, t2;
+uint64_t min_cycles = uint64_t(-1);
+#endif
+
 template<int asm_version>
 void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
 	cn_explode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
 
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
 	if (asm_version == 1)
 		cnv2_mainloop_ivybridge_asm(ctx0);
 	else
 		cnv2_mainloop_ryzen_asm(ctx0);
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
 
 	cn_implode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
-#ifdef PERFORMANCE_TUNING
-extern uint64_t t1, t2;
-#endif
 
 void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
 {
@@ -641,6 +649,12 @@ void minethd::work_main()
 			*piNonce = ++result.iNonce;
 
 			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
+#ifdef PERFORMANCE_TUNING
+			if (t2 - t1 < min_cycles)
+			{
+				min_cycles = t2 - t1;
+			}
+#endif
 
 			if (*piHashVal < oWork.iTarget)
 				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
@@ -700,11 +714,6 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefe
 
 	return func_table[digit.to_ulong()];
 }
-
-#ifdef PERFORMANCE_TUNING
-uint64_t t1, t2;
-uint64_t min_cycles = uint64_t(-1);
-#endif
 
 void minethd::double_work_main()
 {
