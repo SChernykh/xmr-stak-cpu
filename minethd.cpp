@@ -485,6 +485,9 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
+#ifdef PERFORMANCE_TUNING
+extern uint64_t t1, t2;
+#endif
 
 void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
 {
