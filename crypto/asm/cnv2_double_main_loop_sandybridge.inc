@@ -160,7 +160,7 @@ main_loop_double_sandybridge:
 
 	mov	r9, QWORD PTR [rbx+8]
 
-	xor	edx, 16
+	xor edx, 16
 	mov r8d, edx
 	mov r15d, edx
 
@@ -171,20 +171,20 @@ main_loop_double_sandybridge:
 	xor	r10, rdx
 	mov	rax, r10
 	mul	r11
-	movq xmm0, rax
-	movq xmm1, rdx
-	punpcklqdq xmm1, xmm0
+	mov r11d, r8d
+	xor r11d, 48
+	movq xmm0, rdx
+	xor rdx, [r11+r13]
+	movq xmm1, rax
+	xor rax, [r11+r13+8]
+	punpcklqdq xmm0, xmm1
 
-	movdqu	xmm0, XMMWORD PTR [r8+r13]
-	pxor xmm0, xmm1
-	xor	r8d, 48
+	pxor xmm0, XMMWORD PTR [r8+r13]
+	xor	r8d, 32
+	movdqu	xmm1, XMMWORD PTR [r11+r13]
 	paddq	xmm0, xmm7
-	movdqu	xmm1, XMMWORD PTR [r8+r13]
-	xor rdx, [r8+r13]
-	xor rax, [r8+r13+8]
-	movdqu	XMMWORD PTR [r8+r13], xmm0
 	paddq	xmm1, xmm2
-	xor	r8d, 16
+	movdqu	XMMWORD PTR [r11+r13], xmm0
 	movdqu	xmm0, XMMWORD PTR [r8+r13]
 	movdqu	XMMWORD PTR [r8+r13], xmm1
 	paddq	xmm0, xmm3
@@ -285,25 +285,23 @@ sqrt_fix_1_ret_sandybridge:
 	je	sqrt_fix_2_sandybridge
 sqrt_fix_2_ret_sandybridge:
 
+	mov r12d, ecx
+	mov r8d, ecx
+	xor r12d, 16
+	xor r8d, 32
+	xor ecx, 48
 	mov	rax, r10
 	mul	r9
 	movq xmm0, rax
 	movq xmm3, rdx
 	punpcklqdq xmm3, xmm0
 
-	mov r12d, ecx
-	mov r8d, ecx
-	xor r12d, 16
-	xor r8d, 32
-	xor ecx, 48
 	movdqu	xmm0, XMMWORD PTR [r12+rsi]
 	pxor xmm0, xmm3
 	movdqu	xmm1, XMMWORD PTR [r8+rsi]
 	xor rdx, [r8+rsi]
 	xor rax, [r8+rsi+8]
 	movdqu	xmm3, XMMWORD PTR [rcx+rsi]
-	add	rdi, rdx
-	add	rbp, rax
 	paddq	xmm0, xmm6
 	paddq	xmm1, xmm11
 	paddq	xmm3, xmm8
@@ -311,6 +309,7 @@ sqrt_fix_2_ret_sandybridge:
 	movdqu	XMMWORD PTR [rcx+rsi], xmm1
 	movdqu	XMMWORD PTR [r12+rsi], xmm3
 
+	add	rdi, rdx
 	mov	QWORD PTR [r13], rdi
 	xor	rdi, r10
 	mov	ecx, edi
@@ -318,6 +317,7 @@ sqrt_fix_2_ret_sandybridge:
 	lea	r8, QWORD PTR [rcx+rsi]
 
 	mov rdx, QWORD PTR [r13+8]	
+	add	rbp, rax
 	mov	QWORD PTR [r13+8], rbp
 	movdqu xmm11, XMMWORD PTR [rcx+rsi]
 	xor	rbp, rdx

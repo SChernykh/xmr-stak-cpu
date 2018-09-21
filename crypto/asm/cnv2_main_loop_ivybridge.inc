@@ -84,6 +84,7 @@ $main_loop_ivybridge:
 	movdqu	 XMMWORD PTR [rdx], xmm0
 	xor	 rdi, QWORD PTR [r10+rbx]
 	lea	 r14, QWORD PTR [r10+rbx]
+	xor r10d, 32
 	mov	 r12, QWORD PTR [r14+8]
 	xor	 edx, edx
 	lea	 r9d, DWORD PTR [ecx+ecx]
@@ -111,24 +112,22 @@ $main_loop_ivybridge:
 	psrlq	 xmm3, 19
 $sqrt_fixup_ivybridge_ret:
 
-	mov	 r9, r10
+	mov	 ecx, r10d
 	mov	 rax, rdi
 	mul	 rbp
+	movq xmm2, rdx
+	xor rdx, [rcx+rbx]
 	movq xmm0, rax
-	movq xmm1, rdx
-	punpcklqdq xmm1, xmm0
+	xor rax, [rcx+rbx+8]
+	punpcklqdq xmm2, xmm0
 
-	xor	 r9, 16
-	mov	 rcx, r10
-	xor	 rcx, 32
-	xor	 r10, 48
-	movdqu	 xmm2, XMMWORD PTR [r9+rbx]
-	pxor xmm2, xmm1
+	mov	 r9d, r10d
+	xor	 r9d, 48
+	xor	 r10d, 16
+	pxor	 xmm2, XMMWORD PTR [r9+rbx]
 	movdqu	 xmm0, XMMWORD PTR [r10+rbx]
 	paddq	 xmm0, xmm5
 	movdqu	 xmm1, XMMWORD PTR [rcx+rbx]
-	xor rdx, [rcx+rbx]
-	xor rax, [rcx+rbx+8]
 	paddq	 xmm2, xmm4
 	paddq	 xmm1, xmm7
 	movdqa	 xmm5, xmm4
@@ -137,10 +136,10 @@ $sqrt_fixup_ivybridge_ret:
 	movdqu	 XMMWORD PTR [rcx+rbx], xmm2
 	movdqu	 XMMWORD PTR [r10+rbx], xmm1
 	add	 r8, rdx
-	add	 r11, rax
 	mov	 QWORD PTR [r14], r8
 	xor	 r8, rdi
 	mov	 r10, r8
+	add	 r11, rax
 	mov	 QWORD PTR [r14+8], r11
 	and	 r10d, 2097136
 	xor	 r11, r12
