@@ -161,18 +161,8 @@ main_loop_double_sandybridge:
 	mov	r9, QWORD PTR [rbx+8]
 
 	xor	edx, 16
-	mov	eax, edx
-	movdqu	xmm0, XMMWORD PTR [rdx+r13]
-	xor	edx, 48
-	paddq	xmm0, xmm7
-	movdqu	xmm1, XMMWORD PTR [rdx+r13]
-	movdqu	XMMWORD PTR [rdx+r13], xmm0
-	paddq	xmm1, xmm2
-	xor	edx, 16
-	movdqu	xmm0, XMMWORD PTR [rdx+r13]
-	movdqu	XMMWORD PTR [rdx+r13], xmm1
-	paddq	xmm0, xmm3
-	movdqu	XMMWORD PTR [rax+r13], xmm0
+	mov r8d, edx
+	mov r15d, edx
 
 	movq	rdx, xmm5
 	shl	rdx, 32
@@ -181,6 +171,25 @@ main_loop_double_sandybridge:
 	xor	r10, rdx
 	mov	rax, r10
 	mul	r11
+	movq xmm0, rax
+	movq xmm1, rdx
+	punpcklqdq xmm1, xmm0
+
+	movdqu	xmm0, XMMWORD PTR [r8+r13]
+	pxor xmm0, xmm1
+	xor	r8d, 48
+	paddq	xmm0, xmm7
+	movdqu	xmm1, XMMWORD PTR [r8+r13]
+	xor rdx, [r8+r13]
+	xor rax, [r8+r13+8]
+	movdqu	XMMWORD PTR [r8+r13], xmm0
+	paddq	xmm1, xmm2
+	xor	r8d, 16
+	movdqu	xmm0, XMMWORD PTR [r8+r13]
+	movdqu	XMMWORD PTR [r8+r13], xmm1
+	paddq	xmm0, xmm3
+	movdqu	XMMWORD PTR [r15+r13], xmm0
+
 	mov	r11, QWORD PTR [rsp+256]
 	add	r11, rdx
 	mov	rdx, QWORD PTR [rsp+264]
@@ -278,6 +287,9 @@ sqrt_fix_2_ret_sandybridge:
 
 	mov	rax, r10
 	mul	r9
+	movq xmm0, rax
+	movq xmm3, rdx
+	punpcklqdq xmm3, xmm0
 
 	mov r12d, ecx
 	mov r8d, ecx
@@ -285,7 +297,10 @@ sqrt_fix_2_ret_sandybridge:
 	xor r8d, 32
 	xor ecx, 48
 	movdqu	xmm0, XMMWORD PTR [r12+rsi]
+	pxor xmm0, xmm3
 	movdqu	xmm1, XMMWORD PTR [r8+rsi]
+	xor rdx, [r8+rsi]
+	xor rax, [r8+rsi+8]
 	movdqu	xmm3, XMMWORD PTR [rcx+rsi]
 	add	rdi, rdx
 	add	rbp, rax

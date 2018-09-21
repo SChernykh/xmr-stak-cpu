@@ -218,6 +218,16 @@ cryptonight_ctx* minethd_alloc_ctx()
 	return nullptr; //Should never happen
 }
 
+static void print_hash(const char* input, const char* hash)
+{
+	printf("HASH(\"%s\") = ", input);
+	for (int k = 0; k < 32; ++k)
+	{
+		printf("%02x", static_cast<uint8_t>(hash[k]));
+	}
+	printf("\n");
+}
+
 bool minethd::self_test()
 {
 	alloc_msg msg = { 0 };
@@ -327,6 +337,7 @@ bool minethd::self_test()
 
 			if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 			{
+				print_hash(input.c_str(), hash);
 				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
 				return false;
 			}
@@ -335,6 +346,8 @@ bool minethd::self_test()
 			{
 				if (memcmp(hash_dbl, reference_hash_dbl[i], HASH_SIZE * 2) != 0)
 				{
+					print_hash(prev_input.c_str(), hash_dbl);
+					print_hash(input.c_str(), hash_dbl + HASH_SIZE);
 					printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant %d) failed.", i);
 					return false;
 				}
@@ -356,6 +369,7 @@ bool minethd::self_test()
 
 					if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 					{
+						print_hash(input.c_str(), hash);
 						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant 2, asm version %d) failed.", j);
 						return false;
 					}
@@ -363,6 +377,8 @@ bool minethd::self_test()
 					{
 						if (memcmp(hash_dbl, reference_hash_dbl[i], HASH_SIZE * 2) != 0)
 						{
+							print_hash(prev_input.c_str(), hash_dbl);
+							print_hash(input.c_str(), hash_dbl + HASH_SIZE);
 							printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant 2, asm version %d) failed.", j);
 							return false;
 						}

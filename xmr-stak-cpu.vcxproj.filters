@@ -266,5 +266,8 @@
     <None Include="crypto\asm\cnv2_main_loop_ryzen.inc">
       <Filter>Source Files\asm</Filter>
     </None>
+    <None Include="crypto\asm\cnv2_double_main_loop_sandybridge.inc">
+      <Filter>Source Files\asm</Filter>
+    </None>
   </ItemGroup>
 </Project>

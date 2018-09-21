@@ -446,11 +446,10 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		// Shuffle the other 3x16 byte chunks in the current 64-byte cache line
 		if (SHUFFLE)
 		{
-			// Shuffle constants here were chosen carefully
-			// to maximize permutation cycle length
-			// and have no 2-byte elements stay in their places
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]);
+			const __m128i chunk1 = _mm_xor_si128(_mm_load_si128((__m128i *)&l0[idx1 ^ 0x10]), _mm_set_epi64x(lo, hi));
 			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x20]);
+			hi ^= ((uint64_t*)&l0[idx1 ^ 0x20])[0];
+			lo ^= ((uint64_t*)&l0[idx1 ^ 0x20])[1];
 			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[idx1 ^ 0x30]);
 			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x10], _mm_add_epi64(chunk3, bx1));
 			_mm_store_si128((__m128i *)&l0[idx1 ^ 0x20], _mm_add_epi64(chunk1, bx0));
@@ -637,17 +636,6 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		cl = ((uint64_t*)&l0[idx01])[0];
 		ch = ((uint64_t*)&l0[idx01])[1];
 
-		if (SHUFFLE)
-		{
-			uint32_t k = idx01 ^ 0x10;
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l0[k]); k ^= 0x30;
-			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[k]);
-			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk1, bx00)); k ^= 0x10;
-			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[k]);
-			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk2, ax0)); k ^= 0x20;
-			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk3, bx01));
-		}
-
 		if (INT_MATH)
 		{
 			const uint64_t sqrt_result0 = _mm_cvtsi128_si64(sqrt_result_xmm);
@@ -655,6 +643,19 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		}
 
 		lo = _umul128(idx00, cl, &hi);
+
+		if (SHUFFLE)
+		{
+			uint32_t k = idx01 ^ 0x10;
+			const __m128i chunk1 = _mm_xor_si128(_mm_load_si128((__m128i *)&l0[k]), _mm_set_epi64x(lo, hi)); k ^= 0x30;
+			const __m128i chunk2 = _mm_load_si128((__m128i *)&l0[k]);
+			hi ^= ((uint64_t*)&l0[k])[0];
+			lo ^= ((uint64_t*)&l0[k])[1];
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk1, bx00)); k ^= 0x10;
+			const __m128i chunk3 = _mm_load_si128((__m128i *)&l0[k]);
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk2, ax0)); k ^= 0x20;
+			_mm_store_si128((__m128i *)&l0[k], _mm_add_epi64(chunk3, bx01));
+		}
 
 		axl0 += hi;
 		axh0 += lo;
@@ -683,8 +684,10 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		if (SHUFFLE)
 		{
 			uint32_t k = idx11 ^ 0x10;
-			const __m128i chunk1 = _mm_load_si128((__m128i *)&l1[k]); k ^= 0x30;
+			const __m128i chunk1 = _mm_xor_si128(_mm_load_si128((__m128i *)&l1[k]), _mm_set_epi64x(lo, hi)); k ^= 0x30;
 			const __m128i chunk2 = _mm_load_si128((__m128i *)&l1[k]);
+			hi ^= ((uint64_t*)&l1[k])[0];
+			lo ^= ((uint64_t*)&l1[k])[1];
 			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk1, bx10)); k ^= 0x10;
 			const __m128i chunk3 = _mm_load_si128((__m128i *)&l1[k]);
 			_mm_store_si128((__m128i *)&l1[k], _mm_add_epi64(chunk2, ax1)); k ^= 0x20;
