@@ -349,6 +349,10 @@ static FORCEINLINE uint64_t int_sqrt_v2(uint64_t n0)
 	return r;
 }
 
+#ifdef PERFORMANCE_TUNING
+extern uint64_t t1, t2;
+#endif
+
 template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool INT_MATH>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
@@ -383,6 +387,10 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 #else
 	std::fesetround(FE_TOWARDZERO);
 #endif
+#endif
+
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
 #endif
 
 	// Optim - 90% time boundary
@@ -475,6 +483,10 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		bx0 = cx;
 	}
 
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
+
 	// Optim - 90% time boundary
 	cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
 
@@ -529,8 +541,6 @@ static FORCEINLINE void int_math_v2_double_hash(__m128i& division_result, __m128
 	sqrt_result = _mm_set_epi64x(r1, r0);
 }
 
-//extern uint64_t t1, t2;
-
 template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, bool PREFETCH, bool SHUFFLE, bool INT_MATH>
 void cryptonight_double_hash(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
 {
@@ -569,7 +579,9 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 	std::fesetround(FE_UPWARD);
 #endif
 
-	//t1 = __rdtsc();
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
 
 	// Optim - 90% time boundary
 	for (size_t i = 0; i < ITERATIONS; i++)
@@ -715,7 +727,9 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		bx10 = cx1;
 	}
 
-	//t2 = __rdtsc();
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
 
 	// Optim - 90% time boundary
 	cn_implode_scratchpad<MEM, SOFT_AES, PREFETCH>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);

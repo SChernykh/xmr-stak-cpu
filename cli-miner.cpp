@@ -110,6 +110,7 @@ void do_benchmark()
 	double rdtsc_speed = static_cast<double>(tsc2 - tsc1) / 1e9 / (t2.QuadPart - t1.QuadPart) * f.QuadPart;
 	printer::inst()->print_msg(L0, "rdtsc speed: %.3f GHz", rdtsc_speed);
 	benchmark_time = 10;
+	min_cycles = uint64_t(-1);
 #endif
 
 	using namespace std::chrono;
