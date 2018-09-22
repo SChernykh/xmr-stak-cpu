@@ -123,11 +123,10 @@ $sqrt_fixup_ryzen_ret:
 	xor rax, [rcx+rbx+8]
 	movdqa	xmm2, XMMWORD PTR [r9+rbx]
 	pxor xmm2, xmm0
-	movdqa	xmm0, XMMWORD PTR [r10+rbx]
-	paddq	xmm0, xmm4
+	paddq xmm4, XMMWORD PTR [r10+rbx]
 	paddq	xmm2, xmm3
 	paddq	xmm1, xmm6
-	movdqa	XMMWORD PTR [r9+rbx], xmm0
+	movdqa	XMMWORD PTR [r9+rbx], xmm4
 	movdqa	XMMWORD PTR [rcx+rbx], xmm2
 	movdqa	XMMWORD PTR [r10+rbx], xmm1
 
