@@ -63,28 +63,29 @@ $main_loop_ivybridge:
 	movq	 xmm7, r8
 	punpcklqdq xmm7, xmm0
 	aesenc	 xmm6, xmm7
+	movq	 rbp, xmm6
+	mov	 r9, rbp
+	and	 r9d, 2097136
+	movdqu	 xmm2, XMMWORD PTR [rcx+rbx]
 	movdqu	 xmm1, XMMWORD PTR [rax+rbx]
 	movdqu	 xmm0, XMMWORD PTR [r10+rbx]
 	paddq	 xmm1, xmm7
-	movdqu	 xmm2, XMMWORD PTR [rcx+rbx]
 	paddq	 xmm0, xmm5
 	paddq	 xmm2, xmm4
 	movdqu	 XMMWORD PTR [rcx+rbx], xmm0
-	movq	 rcx, xmm3
 	movdqu	 XMMWORD PTR [rax+rbx], xmm2
-	mov	 rax, rcx
 	movdqu	 XMMWORD PTR [r10+rbx], xmm1
+	mov r10, r9
+	xor r10d, 32
+	movq	 rcx, xmm3
+	mov	 rax, rcx
 	shl	 rax, 32
 	xor	 rdi, rax
-	movq	 rbp, xmm6
 	movdqa	 xmm0, xmm6
 	pxor	 xmm0, xmm4
-	mov	 r10, rbp
-	and	 r10d, 2097136
 	movdqu	 XMMWORD PTR [rdx], xmm0
-	xor	 rdi, QWORD PTR [r10+rbx]
-	lea	 r14, QWORD PTR [r10+rbx]
-	xor r10d, 32
+	xor	 rdi, QWORD PTR [r9+rbx]
+	lea	 r14, QWORD PTR [r9+rbx]
 	mov	 r12, QWORD PTR [r14+8]
 	xor	 edx, edx
 	lea	 r9d, DWORD PTR [ecx+ecx]
