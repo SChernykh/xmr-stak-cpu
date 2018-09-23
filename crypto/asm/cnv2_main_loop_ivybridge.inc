@@ -48,10 +48,10 @@
 	punpcklqdq xmm4, xmm0
 	movq	 xmm0, rcx
 	punpcklqdq xmm5, xmm0
+	movdqu	 xmm6, XMMWORD PTR [r10+rbx]
 
 	ALIGN 64
 $main_loop_ivybridge:
-	movdqu	 xmm6, XMMWORD PTR [r10+rbx]
 	lea	 rdx, QWORD PTR [r10+rbx]
 	mov	 ecx, r10d
 	mov	 eax, r10d
@@ -117,8 +117,15 @@ $sqrt_fixup_ivybridge_ret:
 	mul	 rbp
 	movq xmm2, rdx
 	xor rdx, [rcx+rbx]
+	add	 r8, rdx
+	mov	 QWORD PTR [r14], r8
+	xor	 r8, rdi
+	mov edi, r8d
+	and edi, 2097136
 	movq xmm0, rax
 	xor rax, [rcx+rbx+8]
+	add	 r11, rax
+	mov	 QWORD PTR [r14+8], r11
 	punpcklqdq xmm2, xmm0
 
 	mov	 r9d, r10d
@@ -135,13 +142,8 @@ $sqrt_fixup_ivybridge_ret:
 	movdqa	 xmm4, xmm6
 	movdqu	 XMMWORD PTR [rcx+rbx], xmm2
 	movdqu	 XMMWORD PTR [r10+rbx], xmm1
-	add	 r8, rdx
-	mov	 QWORD PTR [r14], r8
-	xor	 r8, rdi
-	mov	 r10, r8
-	add	 r11, rax
-	mov	 QWORD PTR [r14+8], r11
-	and	 r10d, 2097136
+	movdqu xmm6, [rdi+rbx]
+	mov	 r10d, edi
 	xor	 r11, r12
 	dec rsi
 	jne	 $main_loop_ivybridge
