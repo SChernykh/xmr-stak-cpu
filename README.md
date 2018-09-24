@@ -60,7 +60,9 @@ Good news for CPU and GPU is that division and square roots can be added to the 
 
 # Performance
 
-The following table summarizes performance level for different hardware, relative to current Monero PoW (CryptonightV1).
+The following table summarizes performance level for different hardware, relative to current Monero PoW (CryptonightV1):
+
+`Performance = CNv2 hashrate / CNv1 hashrate`
 
 Source:
 
