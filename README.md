@@ -69,9 +69,9 @@ Source:
 
 Hardware|Performance
 -----------|-------------
+Intel Core i7 7700|101.0%
 AMD Ryzen 5 2600|99.5%
 AMD Radeon RX 560|99.05%
-Intel Core i7 7700|99.0%
 Intel Core i7 2600k|91.9%
 Intel Core i5 3210M|91.9%
 
