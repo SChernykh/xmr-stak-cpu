@@ -69,13 +69,13 @@ Source:
 - https://github.com/fireice-uk/xmr-stak/issues/1851 for most of this table
 - https://github.com/monero-project/monero/pull/4404#issuecomment-424084477 for Intel Core i7 7700
 
-Hardware|Performance
------------|-------------
-Intel Core i7 7700|101.0%
-AMD Ryzen 5 2600|99.5%
-AMD Radeon RX 560|99.05%
-Intel Core i7 2600k|91.9%
-Intel Core i5 3210M|91.9%
+Hardware|CNv1 hashrate|CNv2 hashrate|Performance
+-----------|------|----|-------
+Intel Core i7 7700|302 H/s|305 H/s|101.0%
+AMD Ryzen 5 2600|630.6 H/s|627.3 H/s|99.5%
+AMD Radeon RX 560|466.2 H/s|461.8 H/s|99.05%
+Intel Core i7 2600k|287.5 H/s|267.9 H/s|91.9%
+Intel Core i5 3210M|74.3 H/s|68.3 H/s|91.9%
 
 
 Overall, it seems that all CPU/GPU hardware will get a minimal performance hit.
