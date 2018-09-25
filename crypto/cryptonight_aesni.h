@@ -150,48 +150,89 @@ static inline void aes_round(__m128i key, __m128i* x0, __m128i* x1, __m128i* x2,
 	*x7 = _mm_aesenc_si128(*x7, key);
 }
 
+static FORCEINLINE void soft_aesenc(void* __restrict ptr, const void* __restrict key, const uint32_t* __restrict t)
+{
+	uint32_t x0 = ((const uint32_t*)(ptr))[0];
+	uint32_t x1 = ((const uint32_t*)(ptr))[1];
+	uint32_t x2 = ((const uint32_t*)(ptr))[2];
+	uint32_t x3 = ((const uint32_t*)(ptr))[3];
+
+	uint32_t y0 = t[x0 & 0xff]; x0 >>= 8;
+	uint32_t y1 = t[x1 & 0xff]; x1 >>= 8;
+	uint32_t y2 = t[x2 & 0xff]; x2 >>= 8;
+	uint32_t y3 = t[x3 & 0xff]; x3 >>= 8;
+	t += 256;
+
+	y0 ^= t[x1 & 0xff]; x1 >>= 8;
+	y1 ^= t[x2 & 0xff]; x2 >>= 8;
+	y2 ^= t[x3 & 0xff]; x3 >>= 8;
+	y3 ^= t[x0 & 0xff]; x0 >>= 8;
+	t += 256;
+
+	y0 ^= t[x2 & 0xff]; x2 >>= 8;
+	y1 ^= t[x3 & 0xff]; x3 >>= 8;
+	y2 ^= t[x0 & 0xff]; x0 >>= 8;
+	y3 ^= t[x1 & 0xff]; x1 >>= 8;
+	t += 256;
+
+	y0 ^= t[x3];
+	y1 ^= t[x0];
+	y2 ^= t[x1];
+	y3 ^= t[x2];
+
+	((uint32_t*) ptr)[0] = y0 ^ ((uint32_t*) key)[0];
+	((uint32_t*) ptr)[1] = y1 ^ ((uint32_t*) key)[1];
+	((uint32_t*) ptr)[2] = y2 ^ ((uint32_t*) key)[2];
+	((uint32_t*) ptr)[3] = y3 ^ ((uint32_t*) key)[3];
+}
+
+static FORCEINLINE __m128i soft_aesenc(const void* __restrict ptr, const __m128i key, const uint32_t* __restrict t)
+{
+	uint32_t x0 = ((const uint32_t*)(ptr))[0];
+	uint32_t x1 = ((const uint32_t*)(ptr))[1];
+	uint32_t x2 = ((const uint32_t*)(ptr))[2];
+	uint32_t x3 = ((const uint32_t*)(ptr))[3];
+
+	uint32_t y0 = t[x0 & 0xff]; x0 >>= 8;
+	uint32_t y1 = t[x1 & 0xff]; x1 >>= 8;
+	uint32_t y2 = t[x2 & 0xff]; x2 >>= 8;
+	uint32_t y3 = t[x3 & 0xff]; x3 >>= 8;
+	t += 256;
+
+	y0 ^= t[x1 & 0xff]; x1 >>= 8;
+	y1 ^= t[x2 & 0xff]; x2 >>= 8;
+	y2 ^= t[x3 & 0xff]; x3 >>= 8;
+	y3 ^= t[x0 & 0xff]; x0 >>= 8;
+	t += 256;
+
+	y0 ^= t[x2 & 0xff]; x2 >>= 8;
+	y1 ^= t[x3 & 0xff]; x3 >>= 8;
+	y2 ^= t[x0 & 0xff]; x0 >>= 8;
+	y3 ^= t[x1 & 0xff]; x1 >>= 8;
+
+	y0 ^= t[x3 + 256];
+	y1 ^= t[x0 + 256];
+	y2 ^= t[x1 + 256];
+	y3 ^= t[x2 + 256];
+
+	return _mm_xor_si128(_mm_set_epi32(y3, y2, y1, y0), key);
+}
+
+static NOINLINE void soft_aes_round(const void* __restrict key, void* __restrict x, const uint32_t* __restrict t)
+{
+	soft_aesenc(((__m128i*)(x)) + 0, key, t);
+	soft_aesenc(((__m128i*)(x)) + 1, key, t);
+	soft_aesenc(((__m128i*)(x)) + 2, key, t);
+	soft_aesenc(((__m128i*)(x)) + 3, key, t);
+	soft_aesenc(((__m128i*)(x)) + 4, key, t);
+	soft_aesenc(((__m128i*)(x)) + 5, key, t);
+	soft_aesenc(((__m128i*)(x)) + 6, key, t);
+	soft_aesenc(((__m128i*)(x)) + 7, key, t);
+}
+
 extern "C" const uint32_t t_fn[4][256];
-
-static FORCEINLINE void soft_aesenc(void* __restrict ptr, const void* __restrict key)
-{
-	const uint32_t x0 = ((const uint32_t*)(ptr))[0];
-	const uint32_t x1 = ((const uint32_t*)(ptr))[1];
-	const uint32_t x2 = ((const uint32_t*)(ptr))[2];
-	const uint32_t x3 = ((const uint32_t*)(ptr))[3];
-
-	((uint32_t*) ptr)[0] = (t_fn[0][x0 & 0xff] ^ t_fn[1][(x1 >> 8) & 0xff] ^ t_fn[2][(x2 >> 16) & 0xff] ^ t_fn[3][x3 >> 24]) ^ ((uint32_t*) key)[0];
-	((uint32_t*) ptr)[1] = (t_fn[0][x1 & 0xff] ^ t_fn[1][(x2 >> 8) & 0xff] ^ t_fn[2][(x3 >> 16) & 0xff] ^ t_fn[3][x0 >> 24]) ^ ((uint32_t*) key)[1];
-	((uint32_t*) ptr)[2] = (t_fn[0][x2 & 0xff] ^ t_fn[1][(x3 >> 8) & 0xff] ^ t_fn[2][(x0 >> 16) & 0xff] ^ t_fn[3][x1 >> 24]) ^ ((uint32_t*) key)[2];
-	((uint32_t*) ptr)[3] = (t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]) ^ ((uint32_t*) key)[3];
-}
-
-static FORCEINLINE __m128i soft_aesenc(const void* ptr, const __m128i key)
-{
-	const uint32_t x0 = ((const uint32_t*)(ptr))[0];
-	const uint32_t x1 = ((const uint32_t*)(ptr))[1];
-	const uint32_t x2 = ((const uint32_t*)(ptr))[2];
-	const uint32_t x3 = ((const uint32_t*)(ptr))[3];
-
-	__m128i out = _mm_set_epi32(
-		(t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]),
-		(t_fn[0][x2 & 0xff] ^ t_fn[1][(x3 >> 8) & 0xff] ^ t_fn[2][(x0 >> 16) & 0xff] ^ t_fn[3][x1 >> 24]),
-		(t_fn[0][x1 & 0xff] ^ t_fn[1][(x2 >> 8) & 0xff] ^ t_fn[2][(x3 >> 16) & 0xff] ^ t_fn[3][x0 >> 24]),
-		(t_fn[0][x0 & 0xff] ^ t_fn[1][(x1 >> 8) & 0xff] ^ t_fn[2][(x2 >> 16) & 0xff] ^ t_fn[3][x3 >> 24]));
-
-	return _mm_xor_si128(out, key);
-}
-
-static NOINLINE void soft_aes_round(const void* __restrict key, void* __restrict x)
-{
-	soft_aesenc(((__m128i*)(x)) + 0, key);
-	soft_aesenc(((__m128i*)(x)) + 1, key);
-	soft_aesenc(((__m128i*)(x)) + 2, key);
-	soft_aesenc(((__m128i*)(x)) + 3, key);
-	soft_aesenc(((__m128i*)(x)) + 4, key);
-	soft_aesenc(((__m128i*)(x)) + 5, key);
-	soft_aesenc(((__m128i*)(x)) + 6, key);
-	soft_aesenc(((__m128i*)(x)) + 7, key);
-}
+static_assert(sizeof(t_fn) == sizeof(uint32_t) * 1024, "");
+#define T_FN (const uint32_t*)(t_fn)
 
 template<size_t MEM, bool SOFT_AES>
 void cn_explode_scratchpad(const __m128i* input, __m128i* output)
@@ -223,16 +264,16 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 	{
 		if(SOFT_AES)
 		{
-			soft_aes_round(&k0, xin);
-			soft_aes_round(&k1, xin);
-			soft_aes_round(&k2, xin);
-			soft_aes_round(&k3, xin);
-			soft_aes_round(&k4, xin);
-			soft_aes_round(&k5, xin);
-			soft_aes_round(&k6, xin);
-			soft_aes_round(&k7, xin);
-			soft_aes_round(&k8, xin);
-			soft_aes_round(&k9, xin);
+			soft_aes_round(&k0, xin, T_FN);
+			soft_aes_round(&k1, xin, T_FN);
+			soft_aes_round(&k2, xin, T_FN);
+			soft_aes_round(&k3, xin, T_FN);
+			soft_aes_round(&k4, xin, T_FN);
+			soft_aes_round(&k5, xin, T_FN);
+			soft_aes_round(&k6, xin, T_FN);
+			soft_aes_round(&k7, xin, T_FN);
+			soft_aes_round(&k8, xin, T_FN);
+			soft_aes_round(&k9, xin, T_FN);
 
 			memcpy(output + i, xin, sizeof(xin));
 		}
@@ -300,16 +341,16 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 			xout[6] = _mm_xor_si128(_mm_load_si128(input + i + 6), xout[6]);
 			xout[7] = _mm_xor_si128(_mm_load_si128(input + i + 7), xout[7]);
 
-			soft_aes_round(&k0, xout);
-			soft_aes_round(&k1, xout);
-			soft_aes_round(&k2, xout);
-			soft_aes_round(&k3, xout);
-			soft_aes_round(&k4, xout);
-			soft_aes_round(&k5, xout);
-			soft_aes_round(&k6, xout);
-			soft_aes_round(&k7, xout);
-			soft_aes_round(&k8, xout);
-			soft_aes_round(&k9, xout);
+			soft_aes_round(&k0, xout, T_FN);
+			soft_aes_round(&k1, xout, T_FN);
+			soft_aes_round(&k2, xout, T_FN);
+			soft_aes_round(&k3, xout, T_FN);
+			soft_aes_round(&k4, xout, T_FN);
+			soft_aes_round(&k5, xout, T_FN);
+			soft_aes_round(&k6, xout, T_FN);
+			soft_aes_round(&k7, xout, T_FN);
+			soft_aes_round(&k8, xout, T_FN);
+			soft_aes_round(&k9, xout, T_FN);
 		}
 		else
 		{
@@ -475,7 +516,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		const __m128i ax0 = _mm_set_epi64x(ah0, al0);
 		if(SOFT_AES)
-			cx = soft_aesenc(&l0[idx1], ax0);
+			cx = soft_aesenc(&l0[idx1], ax0, T_FN);
 		else
 			cx = _mm_aesenc_si128(cx, ax0);
 
@@ -680,7 +721,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		const __m128i ax0 = _mm_set_epi64x(axh0, axl0);
 		if (SOFT_AES)
 		{
-			cx0 = soft_aesenc(&l0[idx01], ax0);
+			cx0 = soft_aesenc(&l0[idx01], ax0, T_FN);
 		}
 		else
 		{
@@ -716,7 +757,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
 		if (SOFT_AES)
 		{
-			cx1 = soft_aesenc(&l1[idx11], ax1);
+			cx1 = soft_aesenc(&l1[idx11], ax1, T_FN);
 		}
 		else
 		{
