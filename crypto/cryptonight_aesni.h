@@ -205,8 +205,7 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 
 	if (SOFT_AES)
 	{
-		for (int i = 0; i < 8; ++i)
-			xin[i] = _mm_load_si128(input + 4 + i);
+		memcpy(xin, input + 4, sizeof(xin));
 	}
 	else
 	{
@@ -274,8 +273,7 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 
 	if (SOFT_AES)
 	{
-		for (int i = 0; i < 8; ++i)
-			xout[i] = _mm_load_si128(output + 4 + i);
+		memcpy(xout, output + 4, sizeof(xout));
 	}
 	else
 	{
