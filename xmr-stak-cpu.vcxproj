@@ -214,6 +214,7 @@
     <MASM Include="crypto\asm\cn_main_loop.asm" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="crypto\asm\cnv1_mainloop_sandybridge.inc" />
     <None Include="crypto\asm\cnv2_double_main_loop_sandybridge.inc" />
     <None Include="crypto\asm\cnv2_main_loop_ivybridge.inc" />
     <None Include="crypto\asm\cnv2_main_loop_ryzen.inc" />
