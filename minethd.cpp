@@ -151,7 +151,7 @@ void telemetry::push_perf_value(size_t iThd, uint64_t iHashCount, uint64_t iTime
 	iBucketTop[iThd] = (iTop + 1) & iBucketMask;
 }
 
-minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefetch, bool shuffle, bool int_math, int asm_version, int64_t affinity)
+minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, int variant, int asm_version, int64_t affinity)
 {
 	oWork = pWork;
 	bQuit = 0;
@@ -159,9 +159,7 @@ minethd::minethd(miner_work& pWork, size_t iNo, bool double_work, bool no_prefet
 	iJobNo = 0;
 	iHashCount = 0;
 	iTimestamp = 0;
-	bNoPrefetch = no_prefetch;
-	bShuffle = shuffle;
-	bIntMath = int_math;
+	iVariant = variant;
 	iAsmVersion = asm_version;
 	this->affinity = affinity;
 	thdHandle = 0;
@@ -298,16 +296,8 @@ bool minethd::self_test()
 			char hash_dbl[HASH_SIZE * 2];
 			cn_hash_fun hash_fun;
 			cn_hash_fun_dbl hash_fun_dbl;
-			if (i == 0)
-			{
-				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, false, false, 0);
-				hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, false, false, 0);
-			}
-			else if (i == 2)
-			{
-				hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), true, true, true, 0);
-				hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, true, true, 0);
-			}
+			hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), i, 0);
+			hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), i, 0);
 
 			std::string output;
 			std::getline(f, output);
@@ -315,11 +305,6 @@ bool minethd::self_test()
 			{
 				printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d) failed.", i);
 				return false;
-			}
-
-			if (i == 1)
-			{
-				continue;
 			}
 
 			hash_fun(input.c_str(), input.length(), hash, ctx0);
@@ -358,8 +343,8 @@ bool minethd::self_test()
 				for (int j = 1; j <= 2; ++j)
 				{
 					char hash[32];
-					cn_hash_fun hash_fun = func_selector(true, true, true, true, j);
-					cn_hash_fun_dbl hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), true, true, true, j);
+					cn_hash_fun hash_fun = func_selector(true, 2, j);
+					cn_hash_fun_dbl hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), i, j);
 
 					hash_fun(input.c_str(), input.length(), hash, ctx0);
 					if (!prev_input.empty())
@@ -411,17 +396,20 @@ int minethd::pgo_instrument()
 	cn_hash_fun hash_fun;
 	cn_hash_fun_dbl hash_fun_dbl;
 	char hash[64];
-	for (int i = 0; i < 16; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
-		hash_fun = func_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0, 0);
-		hash_fun_dbl = func_dbl_selector((i & 1) != 0, (i & 2) != 0, (i & 4) != 0, (i & 8) != 0, 0);
-		hash_fun(input, sizeof(input), hash, ctx0);
-		hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
+		for (int j = 0; j <= 1; ++j)
+		{
+			hash_fun = func_selector(j != 0, i, 0);
+			hash_fun_dbl = func_dbl_selector(j != 0, i, 0);
+			hash_fun(input, sizeof(input), hash, ctx0);
+			hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
+		}
 	}
 
 	for (int i = 1; i <= 2; ++i)
 	{
-		hash_fun = func_selector(true, true, true, true, i);
+		hash_fun = func_selector(true, 2, i);
 		hash_fun(input, sizeof(input), hash, ctx0);
 	}
 
@@ -448,7 +436,7 @@ std::vector<minethd*>* minethd::thread_starter(miner_work& pWork)
 	{
 		jconf::inst()->GetThreadConfig(i, cfg);
 
-		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.bNoPrefetch, cfg.bShuffle, cfg.bIntMath, cfg.iAsmVersion, cfg.iCpuAff);
+		minethd* thd = new minethd(pWork, i, cfg.bDoubleMode, cfg.iVariant, cfg.iAsmVersion, cfg.iCpuAff);
 		pvThreads->push_back(thd);
 
 		if(cfg.iCpuAff >= 0)
@@ -495,7 +483,7 @@ template<int asm_version>
 void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
 	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
-	cn_explode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+	cn_explode_scratchpad<MEMORY, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
 
 #ifdef PERFORMANCE_TUNING
 	t1 = __rdtsc();
@@ -508,7 +496,7 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	t2 = __rdtsc();
 #endif
 
-	cn_implode_scratchpad<MEMORY, false, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	cn_implode_scratchpad<MEMORY, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
@@ -519,8 +507,8 @@ void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* outpu
 	keccak((const uint8_t *)input2, len2, ctx1->hash_state, 200);
 
 	// Optim - 99% time boundary
-	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
-	cn_explode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->hash_state, (__m128i*)ctx1->long_state);
+	cn_explode_scratchpad<MEMORY, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+	cn_explode_scratchpad<MEMORY, false>((__m128i*)ctx1->hash_state, (__m128i*)ctx1->long_state);
 
 #ifdef PERFORMANCE_TUNING
 	t1 = __rdtsc();
@@ -531,8 +519,8 @@ void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* outpu
 #endif
 
 	// Optim - 90% time boundary
-	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
-	cn_implode_scratchpad<MEMORY, false, true>((__m128i*)ctx1->long_state, (__m128i*)ctx1->hash_state);
+	cn_implode_scratchpad<MEMORY, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	cn_implode_scratchpad<MEMORY, false>((__m128i*)ctx1->long_state, (__m128i*)ctx1->hash_state);
 
 	// Optim - 99% time boundary
 
@@ -542,14 +530,14 @@ void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* outpu
 	extra_hashes[ctx1->hash_state[0] & 3](ctx1->hash_state, 200, (char*)output2);
 }
 
-minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
+minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_version)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-	if (bHaveAes && bShuffle && bIntMath && (asm_version > 0))
+	if (bHaveAes && (variant == 2) && (asm_version > 0))
 	{
 		switch (asm_version)
 		{
@@ -562,39 +550,17 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, bool bNoPrefetch, boo
 		}
 	}
 
-	static const cn_hash_fun func_table[16] = {
-		// Original cryptonight with shuffle and division
-		cryptonight_hash<0x80000, MEMORY, false, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, true>,
+	static const cn_hash_fun func_table[6] = {
+		cryptonight_hash<0x80000, MEMORY, false, 0>,
+		cryptonight_hash<0x80000, MEMORY, false, 1>,
+		cryptonight_hash<0x80000, MEMORY, false, 2>,
 
-		// Original cryptonight with division
-		cryptonight_hash<0x80000, MEMORY, false, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, true>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, true>,
-
-		// Original cryptonight with shuffle
-		cryptonight_hash<0x80000, MEMORY, false, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, true, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, true, false>,
-
-		// Original cryptonight
-		cryptonight_hash<0x80000, MEMORY, false, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, false, true, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, false, false, false>,
-		cryptonight_hash<0x80000, MEMORY, true, true, false, false>,
+		cryptonight_hash<0x80000, MEMORY, true, 0>,
+		cryptonight_hash<0x80000, MEMORY, true, 1>,
+		cryptonight_hash<0x80000, MEMORY, true, 2>,
 	};
 
-	std::bitset<4> digit;
-	digit.set(0, !bNoPrefetch);
-	digit.set(1, !bHaveAes);
-	digit.set(2, !bShuffle);
-	digit.set(3, !bIntMath);
-
-	return func_table[digit.to_ulong()];
+	return func_table[variant + (bHaveAes ? 0 : 3)];
 }
 
 void minethd::pin_thd_affinity()
@@ -621,7 +587,7 @@ void minethd::work_main()
 	uint32_t* piNonce;
 	job_result result;
 
-	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, iAsmVersion);
+	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), iVariant, iAsmVersion);
 	ctx = minethd_alloc_ctx();
 
 	piHashVal = (uint64_t*)(result.bResult + 24);
@@ -684,51 +650,29 @@ void minethd::work_main()
 	cryptonight_free_ctx(ctx);
 }
 
-minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, bool bNoPrefetch, bool bShuffle, bool bIntMath, int asm_version)
+minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, int variant, int asm_version)
 {
 	// We have two independent flag bits in the functions
 	// therefore we will build a binary digit and select the
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-	if (bHaveAes && bShuffle && bIntMath && (asm_version > 0))
+	if (bHaveAes && (variant == 2) && (asm_version > 0))
 	{
 		return cryptonight_double_hash_v2_asm;
 	}
 
-	static const cn_hash_fun_dbl func_table[16] = {
-		// Original cryptonight with shuffle and division
-		cryptonight_double_hash<0x80000, MEMORY, false, false, true, true>,
-		cryptonight_double_hash<0x80000, MEMORY, false, true, true, true>,
-		cryptonight_double_hash<0x80000, MEMORY, true, false, true, true>,
-		cryptonight_double_hash<0x80000, MEMORY, true, true, true, true>,
+	static const cn_hash_fun_dbl func_table[6] = {
+		cryptonight_double_hash<0x80000, MEMORY, false, 0>,
+		cryptonight_double_hash<0x80000, MEMORY, false, 1>,
+		cryptonight_double_hash<0x80000, MEMORY, false, 2>,
 
-		// Original cryptonight with division
-		cryptonight_double_hash<0x80000, MEMORY, false, false, false, true>,
-		cryptonight_double_hash<0x80000, MEMORY, false, true, false, true>,
-		cryptonight_double_hash<0x80000, MEMORY, true, false, false, true>,
-		cryptonight_double_hash<0x80000, MEMORY, true, true, false, true>,
-
-		// Original cryptonight with shuffle
-		cryptonight_double_hash<0x80000, MEMORY, false, false, true, false>,
-		cryptonight_double_hash<0x80000, MEMORY, false, true, true, false>,
-		cryptonight_double_hash<0x80000, MEMORY, true, false, true, false>,
-		cryptonight_double_hash<0x80000, MEMORY, true, true, true, false>,
-
-		// Original cryptonight
-		cryptonight_double_hash<0x80000, MEMORY, false, false, false, false>,
-		cryptonight_double_hash<0x80000, MEMORY, false, true, false, false>,
-		cryptonight_double_hash<0x80000, MEMORY, true, false, false, false>,
-		cryptonight_double_hash<0x80000, MEMORY, true, true, false, false>,
+		cryptonight_double_hash<0x80000, MEMORY, true, 0>,
+		cryptonight_double_hash<0x80000, MEMORY, true, 1>,
+		cryptonight_double_hash<0x80000, MEMORY, true, 2>,
 	};
 
-	std::bitset<4> digit;
-	digit.set(0, !bNoPrefetch);
-	digit.set(1, !bHaveAes);
-	digit.set(2, !bShuffle);
-	digit.set(3, !bIntMath);
-
-	return func_table[digit.to_ulong()];
+	return func_table[variant + (bHaveAes ? 0 : 3)];
 }
 
 void minethd::double_work_main()
@@ -747,7 +691,7 @@ void minethd::double_work_main()
 	uint32_t iNonce;
 	job_result res;
 
-	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), bNoPrefetch, bShuffle, bIntMath, iAsmVersion);
+	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), iVariant, iAsmVersion);
 	ctx0 = minethd_alloc_ctx();
 	ctx1 = minethd_alloc_ctx();
 

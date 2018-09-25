@@ -45,7 +45,7 @@ using namespace rapidjson;
 /*
  * This enum needs to match index in oConfigValues, otherwise we will get a runtime error
  */
-enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, bTestShuffle, bTestIntMath, iAsmVersion, bAesOverride,
+enum configEnum { aCpuThreadsConf, sUseSlowMem, bNiceHashMode, iVariant, iAsmVersion, bAesOverride,
 	bTlsMode, bTlsSecureAlgo, sTlsFingerprint, sPoolAddr, sWalletAddr, sPoolPwd,
 	iCallTimeout, iNetRetry, iGiveUpLimit, iVerboseLevel, iAutohashTime,
 	bDaemonMode, sOutputFile, iHttpdPort, bPreferIpv4 };
@@ -62,8 +62,7 @@ configVal oConfigValues[] = {
 	{ aCpuThreadsConf, "cpu_threads_conf", kNullType },
 	{ sUseSlowMem, "use_slow_memory", kStringType },
 	{ bNiceHashMode, "nicehash_nonce", kTrueType },
-	{ bTestShuffle, "test_shuffle", kTrueType },
-	{ bTestIntMath, "test_int_math", kTrueType },
+	{ iVariant, "variant", kNumberType },
 	{ iAsmVersion, "asm_version", kNumberType },
 	{ bAesOverride, "aes_override", kNullType },
 	{ bTlsMode, "use_tls", kTrueType },
@@ -129,15 +128,14 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 	if(!oThdConf.IsObject())
 		return false;
 
-	const Value *mode, *no_prefetch, *aff;
+	const Value *mode, *aff;
 	mode = GetObjectMember(oThdConf, "low_power_mode");
-	no_prefetch = GetObjectMember(oThdConf, "no_prefetch");
 	aff = GetObjectMember(oThdConf, "affine_to_cpu");
 
-	if(mode == nullptr || no_prefetch == nullptr || aff == nullptr)
+	if(mode == nullptr || aff == nullptr)
 		return false;
 
-	if(!mode->IsBool() || !no_prefetch->IsBool())
+	if(!mode->IsBool())
 		return false;
 
 	if(!aff->IsNumber() && !aff->IsBool())
@@ -147,9 +145,7 @@ bool jconf::GetThreadConfig(size_t id, thd_cfg &cfg)
 		return false;
 
 	cfg.bDoubleMode = mode->GetBool();
-	cfg.bNoPrefetch = no_prefetch->GetBool();
-	cfg.bShuffle = prv->configValues[bTestShuffle]->GetBool();
-	cfg.bIntMath = prv->configValues[bTestIntMath]->GetBool();
+	cfg.iVariant = prv->configValues[iVariant]->GetInt();
 	cfg.iAsmVersion = prv->configValues[iAsmVersion]->GetInt();
 
 	if(aff->IsNumber())
