@@ -211,7 +211,7 @@
     <ClInclude Include="webdesign.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="crypto\asm\cnv2_main_loop.asm" />
+    <MASM Include="crypto\asm\cn_main_loop.asm" />
   </ItemGroup>
   <ItemGroup>
     <None Include="crypto\asm\cnv2_double_main_loop_sandybridge.inc" />

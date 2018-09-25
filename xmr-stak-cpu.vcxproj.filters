@@ -255,11 +255,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="crypto\asm\cnv2_main_loop.asm">
-      <Filter>Source Files\asm</Filter>
-    </MASM>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="crypto\asm\cnv2_main_loop_ivybridge.inc">
       <Filter>Source Files\asm</Filter>
     </None>
@@ -269,5 +264,10 @@
     <None Include="crypto\asm\cnv2_double_main_loop_sandybridge.inc">
       <Filter>Source Files\asm</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="crypto\asm\cn_main_loop.asm">
+      <Filter>Source Files\asm</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

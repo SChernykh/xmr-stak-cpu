@@ -189,7 +189,7 @@ target_link_libraries(xmr-stak-c ${LIBS})
 
 add_library(xmr-stak-asm
     STATIC
-    "crypto/asm/cnv2_main_loop.S"
+    "crypto/asm/cn_main_loop.S"
 )
 set_property(TARGET xmr-stak-asm PROPERTY LINKER_LANGUAGE C)
 

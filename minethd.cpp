@@ -344,12 +344,12 @@ bool minethd::self_test()
 				}
 			}
 
-			if (jconf::inst()->HaveHardwareAes() && (i == 2))
+			if (jconf::inst()->HaveHardwareAes() && (i > 0))
 			{
 				for (int j = 1; j <= 2; ++j)
 				{
 					char hash[32];
-					cn_hash_fun hash_fun = func_selector(true, 2, j);
+					cn_hash_fun hash_fun = func_selector(true, i, j);
 					cn_hash_fun_dbl hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), i, j);
 
 					hash_fun(input.c_str(), input.length(), hash, ctx0);
@@ -361,7 +361,7 @@ bool minethd::self_test()
 					if (memcmp(hash, reference_hash[i], HASH_SIZE) != 0)
 					{
 						print_hash(input.c_str(), hash);
-						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant 2, asm version %d) failed.", j);
+						printer::inst()->print_msg(L0, "Cryptonight hash self-test (variant %d, asm version %d) failed.", i, j);
 						return false;
 					}
 					if (!prev_input.empty())
@@ -370,7 +370,7 @@ bool minethd::self_test()
 						{
 							print_hash(prev_input.c_str(), hash_dbl);
 							print_hash(input.c_str(), hash_dbl + HASH_SIZE);
-							printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant 2, asm version %d) failed.", j);
+							printer::inst()->print_msg(L0, "Cryptonight double hash self-test (variant %d, asm version %d) failed.", i, j);
 							return false;
 						}
 					}
@@ -413,12 +413,15 @@ int minethd::pgo_instrument()
 		}
 	}
 
-	for (int i = 1; i <= 2; ++i)
+	for (int variant = 0; variant <= 2; ++variant)
 	{
-		hash_fun = func_selector(true, 2, i);
-		hash_fun_dbl = func_dbl_selector(true, 2, i);
-		hash_fun(input, sizeof(input), hash, ctx0);
-		hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
+		for (int i = 1; i <= 2; ++i)
+		{
+			hash_fun = func_selector(true, variant, i);
+			hash_fun_dbl = func_dbl_selector(true, variant, i);
+			hash_fun(input, sizeof(input), hash, ctx0);
+			hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
+		}
 	}
 
 	cryptonight_free_ctx(ctx0);
@@ -479,6 +482,7 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
+extern "C" void cnv1_mainloop_sandybridge_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
 extern "C" void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
@@ -489,6 +493,26 @@ uint64_t min_cycles = uint64_t(-1);
 #endif
 
 ALIGN(64) uint8_t variant1_table[256];
+
+void cryptonight_hash_v1_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
+{
+	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
+	cn_explode_scratchpad<MEMORY, false>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
+	ctx0->input = input;
+	ctx0->variant1_table = variant1_table;
+	cnv1_mainloop_sandybridge_asm(ctx0);
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
+
+	cn_implode_scratchpad<MEMORY, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	keccakf((uint64_t*)ctx0->hash_state, 24);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+}
 
 template<int asm_version>
 void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
@@ -548,16 +572,23 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-	if (bHaveAes && (variant == 2) && (asm_version > 0))
+	if (bHaveAes && (asm_version > 0))
 	{
-		switch (asm_version)
+		if (variant == 1)
 		{
-		case 1:
-			// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
-			return cryptonight_hash_v2_asm<1>;
-		case 2:
-			// AMD Ryzen (1xxx and 2xxx series)
-			return cryptonight_hash_v2_asm<2>;
+			return cryptonight_hash_v1_asm;
+		}
+		else if (variant == 2)
+		{
+			switch (asm_version)
+			{
+			case 1:
+				// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
+				return cryptonight_hash_v2_asm<1>;
+			case 2:
+				// AMD Ryzen (1xxx and 2xxx series)
+				return cryptonight_hash_v2_asm<2>;
+			}
 		}
 	}
 
