@@ -344,12 +344,12 @@ bool minethd::self_test()
 				}
 			}
 
-			if (jconf::inst()->HaveHardwareAes() && (i > 0))
+			if (i > 0)
 			{
 				for (int j = 1; j <= 2; ++j)
 				{
 					char hash[32];
-					cn_hash_fun hash_fun = func_selector(true, i, j);
+					cn_hash_fun hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), i, j);
 					cn_hash_fun_dbl hash_fun_dbl = func_dbl_selector(jconf::inst()->HaveHardwareAes(), i, j);
 
 					hash_fun(input.c_str(), input.length(), hash, ctx0);
@@ -482,10 +482,14 @@ void minethd::consume_work()
 	iConsumeCnt++;
 }
 
-extern "C" void cnv1_mainloop_sandybridge_asm(cryptonight_ctx* ctx0);
-extern "C" void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
-extern "C" void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
-extern "C" void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
+extern "C"
+{
+	void cnv1_mainloop_sandybridge_asm(cryptonight_ctx* ctx0);
+	void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
+	void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
+	void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
+	void cnv1_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
+}
 
 #ifdef PERFORMANCE_TUNING
 uint64_t t1, t2;
@@ -510,6 +514,27 @@ void cryptonight_hash_v1_asm(const void* input, size_t len, void* output, crypto
 #endif
 
 	cn_implode_scratchpad<MEMORY, false>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	keccakf((uint64_t*)ctx0->hash_state, 24);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+}
+
+void cryptonight_hash_v1_soft_aes_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
+{
+	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
+	cn_explode_scratchpad<MEMORY, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
+	ctx0->input = input;
+	ctx0->variant1_table = variant1_table;
+	ctx0->t_fn = (const uint32_t*)t_fn;
+	cnv1_mainloop_soft_aes_sandybridge_asm(ctx0);
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
+
+	cn_implode_scratchpad<MEMORY, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
 	keccakf((uint64_t*)ctx0->hash_state, 24);
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
@@ -572,22 +597,30 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 	// function as a two digit binary
 	// Digit order SOFT_AES, NO_PREFETCH, SHUFFLE, INT_MATH
 
-	if (bHaveAes && (asm_version > 0))
+	if (asm_version > 0)
 	{
-		if (variant == 1)
+		if (!bHaveAes)
 		{
-			return cryptonight_hash_v1_asm;
+			if (variant == 1)
+				return cryptonight_hash_v1_soft_aes_asm;
 		}
-		else if (variant == 2)
+		else if (bHaveAes && (asm_version > 0))
 		{
-			switch (asm_version)
+			if (variant == 1)
 			{
-			case 1:
-				// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
-				return cryptonight_hash_v2_asm<1>;
-			case 2:
-				// AMD Ryzen (1xxx and 2xxx series)
-				return cryptonight_hash_v2_asm<2>;
+				return cryptonight_hash_v1_asm;
+			}
+			else if (variant == 2)
+			{
+				switch (asm_version)
+				{
+				case 1:
+					// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
+					return cryptonight_hash_v2_asm<1>;
+				case 2:
+					// AMD Ryzen (1xxx and 2xxx series)
+					return cryptonight_hash_v2_asm<2>;
+				}
 			}
 		}
 	}

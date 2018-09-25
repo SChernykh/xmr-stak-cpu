@@ -16,6 +16,7 @@ typedef struct {
 	uint8_t ctx_info[24]; //Use some of the extra memory for flags
 	const void* input;
 	uint8_t* variant1_table;
+	const uint32_t* t_fn;
 } cryptonight_ctx;
 
 typedef struct {
