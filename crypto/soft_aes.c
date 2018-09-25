@@ -152,23 +152,6 @@ y[3] = (k)[3]  ^ (t_fn[0][x[3] & 0xff] ^ t_fn[1][(x[0] >> 8) & 0xff] ^ t_fn[2][(
 
 d_4(uint32_t, t_dec(f,n), sb_data, u0, u1, u2, u3);
 
-__m128i soft_aesenc(__m128i in, __m128i key)
-{
-	uint32_t x0, x1, x2, x3;
-	x0 = _mm_cvtsi128_si32(in);
-	x1 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0x55));
-	x2 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0xAA));
-	x3 = _mm_cvtsi128_si32(_mm_shuffle_epi32(in, 0xFF));
-
-	__m128i out = _mm_set_epi32(
-		(t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]),
-		(t_fn[0][x2 & 0xff] ^ t_fn[1][(x3 >> 8) & 0xff] ^ t_fn[2][(x0 >> 16) & 0xff] ^ t_fn[3][x1 >> 24]),
-		(t_fn[0][x1 & 0xff] ^ t_fn[1][(x2 >> 8) & 0xff] ^ t_fn[2][(x3 >> 16) & 0xff] ^ t_fn[3][x0 >> 24]),
-		(t_fn[0][x0 & 0xff] ^ t_fn[1][(x1 >> 8) & 0xff] ^ t_fn[2][(x2 >> 16) & 0xff] ^ t_fn[3][x3 >> 24]));
-
-	return _mm_xor_si128(out, key);
-}
-
 uint8_t Sbox[256] = {		// forward s-box
 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,

@@ -22,6 +22,18 @@
 #include <cfenv>
 
 #ifdef __GNUC__
+#define LIKELY(X) __builtin_expect(X, 1)
+#define UNLIKELY(X) __builtin_expect(X, 0)
+#define FORCEINLINE __attribute__((always_inline)) inline
+#define NOINLINE __attribute__((noinline))
+#else
+#define LIKELY(X) X
+#define UNLIKELY(X) X
+#define FORCEINLINE __forceinline
+#define NOINLINE __declspec(noinline)
+#endif
+
+#ifdef __GNUC__
 #include <x86intrin.h>
 static inline uint64_t _umul128(uint64_t a, uint64_t b, uint64_t* hi)
 {
@@ -44,7 +56,6 @@ extern "C"
 	void keccakf(uint64_t st[25], int rounds);
 	extern void(*const extra_hashes[4])(const void *, size_t, char *);
 
-	__m128i soft_aesenc(__m128i in, __m128i key);
 	__m128i soft_aeskeygenassist(__m128i key, uint8_t rcon);
 }
 
@@ -139,16 +150,47 @@ static inline void aes_round(__m128i key, __m128i* x0, __m128i* x1, __m128i* x2,
 	*x7 = _mm_aesenc_si128(*x7, key);
 }
 
-static inline void soft_aes_round(__m128i key, __m128i* x0, __m128i* x1, __m128i* x2, __m128i* x3, __m128i* x4, __m128i* x5, __m128i* x6, __m128i* x7)
+extern "C" const uint32_t t_fn[4][256];
+
+static FORCEINLINE void soft_aesenc(void* __restrict ptr, const void* __restrict key)
 {
-	*x0 = soft_aesenc(*x0, key);
-	*x1 = soft_aesenc(*x1, key);
-	*x2 = soft_aesenc(*x2, key);
-	*x3 = soft_aesenc(*x3, key);
-	*x4 = soft_aesenc(*x4, key);
-	*x5 = soft_aesenc(*x5, key);
-	*x6 = soft_aesenc(*x6, key);
-	*x7 = soft_aesenc(*x7, key);
+	const uint32_t x0 = ((const uint32_t*)(ptr))[0];
+	const uint32_t x1 = ((const uint32_t*)(ptr))[1];
+	const uint32_t x2 = ((const uint32_t*)(ptr))[2];
+	const uint32_t x3 = ((const uint32_t*)(ptr))[3];
+
+	((uint32_t*) ptr)[0] = (t_fn[0][x0 & 0xff] ^ t_fn[1][(x1 >> 8) & 0xff] ^ t_fn[2][(x2 >> 16) & 0xff] ^ t_fn[3][x3 >> 24]) ^ ((uint32_t*) key)[0];
+	((uint32_t*) ptr)[1] = (t_fn[0][x1 & 0xff] ^ t_fn[1][(x2 >> 8) & 0xff] ^ t_fn[2][(x3 >> 16) & 0xff] ^ t_fn[3][x0 >> 24]) ^ ((uint32_t*) key)[1];
+	((uint32_t*) ptr)[2] = (t_fn[0][x2 & 0xff] ^ t_fn[1][(x3 >> 8) & 0xff] ^ t_fn[2][(x0 >> 16) & 0xff] ^ t_fn[3][x1 >> 24]) ^ ((uint32_t*) key)[2];
+	((uint32_t*) ptr)[3] = (t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]) ^ ((uint32_t*) key)[3];
+}
+
+static FORCEINLINE __m128i soft_aesenc(const void* ptr, const __m128i key)
+{
+	const uint32_t x0 = ((const uint32_t*)(ptr))[0];
+	const uint32_t x1 = ((const uint32_t*)(ptr))[1];
+	const uint32_t x2 = ((const uint32_t*)(ptr))[2];
+	const uint32_t x3 = ((const uint32_t*)(ptr))[3];
+
+	__m128i out = _mm_set_epi32(
+		(t_fn[0][x3 & 0xff] ^ t_fn[1][(x0 >> 8) & 0xff] ^ t_fn[2][(x1 >> 16) & 0xff] ^ t_fn[3][x2 >> 24]),
+		(t_fn[0][x2 & 0xff] ^ t_fn[1][(x3 >> 8) & 0xff] ^ t_fn[2][(x0 >> 16) & 0xff] ^ t_fn[3][x1 >> 24]),
+		(t_fn[0][x1 & 0xff] ^ t_fn[1][(x2 >> 8) & 0xff] ^ t_fn[2][(x3 >> 16) & 0xff] ^ t_fn[3][x0 >> 24]),
+		(t_fn[0][x0 & 0xff] ^ t_fn[1][(x1 >> 8) & 0xff] ^ t_fn[2][(x2 >> 16) & 0xff] ^ t_fn[3][x3 >> 24]));
+
+	return _mm_xor_si128(out, key);
+}
+
+static NOINLINE void soft_aes_round(const void* __restrict key, void* __restrict x0, void* __restrict x1, void* __restrict x2, void* __restrict x3, void* __restrict x4, void* __restrict x5, void* __restrict x6, void* __restrict x7)
+{
+	soft_aesenc(x0, key);
+	soft_aesenc(x1, key);
+	soft_aesenc(x2, key);
+	soft_aesenc(x3, key);
+	soft_aesenc(x4, key);
+	soft_aesenc(x5, key);
+	soft_aesenc(x6, key);
+	soft_aesenc(x7, key);
 }
 
 template<size_t MEM, bool SOFT_AES>
@@ -173,16 +215,16 @@ void cn_explode_scratchpad(const __m128i* input, __m128i* output)
 	{
 		if(SOFT_AES)
 		{
-			soft_aes_round(k0, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k1, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k2, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k3, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k4, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k5, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k6, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k7, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k8, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
-			soft_aes_round(k9, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k0, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k1, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k2, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k3, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k4, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k5, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k6, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k7, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k8, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
+			soft_aes_round(&k9, &xin0, &xin1, &xin2, &xin3, &xin4, &xin5, &xin6, &xin7);
 		}
 		else
 		{
@@ -242,16 +284,16 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 
 		if(SOFT_AES)
 		{
-			soft_aes_round(k0, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k1, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k2, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k3, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k4, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k5, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k6, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k7, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k8, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
-			soft_aes_round(k9, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k0, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k1, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k2, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k3, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k4, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k5, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k6, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k7, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k8, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
+			soft_aes_round(&k9, &xout0, &xout1, &xout2, &xout3, &xout4, &xout5, &xout6, &xout7);
 		}
 		else
 		{
@@ -277,16 +319,6 @@ void cn_implode_scratchpad(const __m128i* input, __m128i* output)
 	_mm_store_si128(output + 10, xout6);
 	_mm_store_si128(output + 11, xout7);
 }
-
-#ifdef __GNUC__
-#define LIKELY(X) __builtin_expect(X, 1)
-#define UNLIKELY(X) __builtin_expect(X, 0)
-#define FORCEINLINE __attribute__((always_inline)) inline
-#else
-#define LIKELY(X) X
-#define UNLIKELY(X) X
-#define FORCEINLINE __forceinline
-#endif
 
 template<bool IS_PGO>
 static FORCEINLINE void int_sqrt_v2_fixup(uint64_t& r, uint64_t n0)
@@ -411,7 +443,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 
 		const __m128i ax0 = _mm_set_epi64x(ah0, al0);
 		if(SOFT_AES)
-			cx = soft_aesenc(cx, ax0);
+			cx = soft_aesenc(&l0[idx1], ax0);
 		else
 			cx = _mm_aesenc_si128(cx, ax0);
 
@@ -616,7 +648,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		const __m128i ax0 = _mm_set_epi64x(axh0, axl0);
 		if (SOFT_AES)
 		{
-			cx0 = soft_aesenc(cx0, ax0);
+			cx0 = soft_aesenc(&l0[idx01], ax0);
 		}
 		else
 		{
@@ -652,7 +684,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		const __m128i ax1 = _mm_set_epi64x(axh1, axl1);
 		if (SOFT_AES)
 		{
-			cx1 = soft_aesenc(cx1, ax1);
+			cx1 = soft_aesenc(&l1[idx11], ax1);
 		}
 		else
 		{
