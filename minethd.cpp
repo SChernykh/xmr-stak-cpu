@@ -228,6 +228,12 @@ static void print_hash(const char* input, const char* hash)
 
 bool minethd::self_test()
 {
+	for (int i = 0; i < 256; ++i)
+	{
+		const uint64_t index = (((i >> 3) & 6) | (i & 1)) << 1;
+		variant1_table[i] = i ^ ((0x75310 >> index) & 0x30);
+	}
+
 	alloc_msg msg = { 0 };
 	size_t res;
 	bool fatal = false;
@@ -396,7 +402,7 @@ int minethd::pgo_instrument()
 	cn_hash_fun hash_fun;
 	cn_hash_fun_dbl hash_fun_dbl;
 	char hash[64];
-	for (int i = 0; i < 6; ++i)
+	for (int i = 0; i < 3; ++i)
 	{
 		for (int j = 0; j <= 1; ++j)
 		{
@@ -410,10 +416,13 @@ int minethd::pgo_instrument()
 	for (int i = 1; i <= 2; ++i)
 	{
 		hash_fun = func_selector(true, 2, i);
+		hash_fun_dbl = func_dbl_selector(true, 2, i);
 		hash_fun(input, sizeof(input), hash, ctx0);
+		hash_fun_dbl(input, sizeof(input), hash, input, sizeof(input), hash + 32, ctx0, ctx1);
 	}
 
 	cryptonight_free_ctx(ctx0);
+	cryptonight_free_ctx(ctx1);
 
 	printer::inst()->print_msg(L0, "Finished instrumenting cryptonight_hash()");
 	return 0;
@@ -478,6 +487,8 @@ extern "C" void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryp
 uint64_t t1, t2;
 uint64_t min_cycles = uint64_t(-1);
 #endif
+
+ALIGN(64) uint8_t variant1_table[256];
 
 template<int asm_version>
 void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)

@@ -341,6 +341,16 @@ static FORCEINLINE uint64_t int_sqrt_v2(uint64_t n0)
 extern uint64_t t1, t2;
 #endif
 
+#if defined(_MSC_VER)
+#define ALIGN(N) __declspec(align(N))
+#elif defined(__GNUC__)
+#define ALIGN(N) __attribute__ ((aligned(N)))
+#else
+#define ALIGN(N)
+#endif
+
+extern ALIGN(64) uint8_t variant1_table[256];
+
 template<size_t ITERATIONS, size_t MEM, bool SOFT_AES, int VARIANT>
 void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
 {
@@ -419,10 +429,7 @@ void cryptonight_hash(const void* input, size_t len, void* output, cryptonight_c
 		{
 			__m128i b = _mm_xor_si128(bx0, cx);
 			_mm_store_si128((__m128i *)&l0[idx1], b);
-
-			const uint64_t tmp = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)));
-			const uint64_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1;
-			((uint8_t*)(&l0[idx1]))[11] = tmp ^ ((0x75310 >> index) & 0x30);
+			l0[idx1 + 11] = variant1_table[static_cast<uint8_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)))];
 		}
 		else
 		{
@@ -631,10 +638,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		{
 			__m128i b = _mm_xor_si128(bx00, cx0);
 			_mm_store_si128((__m128i *)&l0[idx01], b);
-
-			const uint64_t tmp = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)));
-			const uint64_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1;
-			((uint8_t*)(&l0[idx01]))[11] = tmp ^ ((0x75310 >> index) & 0x30);
+			l0[idx01 + 11] = variant1_table[static_cast<uint8_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)))];
 		}
 		else
 		{
@@ -670,10 +674,7 @@ void cryptonight_double_hash(const void* input1, size_t len1, void* output1, con
 		{
 			__m128i b = _mm_xor_si128(bx10, cx1);
 			_mm_store_si128((__m128i *)&l1[idx11], b);
-
-			const uint64_t tmp = static_cast<uint64_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)));
-			const uint64_t index = (((tmp >> 3) & 6) | (tmp & 1)) << 1;
-			((uint8_t*)(&l1[idx11]))[11] = tmp ^ ((0x75310 >> index) & 0x30);
+			l1[idx11 + 11] = variant1_table[static_cast<uint8_t>(_mm_cvtsi128_si64(_mm_srli_si128(b, 11)))];
 		}
 		else
 		{
