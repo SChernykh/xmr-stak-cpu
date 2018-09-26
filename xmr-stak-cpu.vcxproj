@@ -217,6 +217,7 @@
     <None Include="crypto\asm\cnv1_mainloop_sandybridge.inc" />
     <None Include="crypto\asm\cnv1_mainloop_soft_aes_sandybridge.inc" />
     <None Include="crypto\asm\cnv2_double_main_loop_sandybridge.inc" />
+    <None Include="crypto\asm\cnv2_mainloop_soft_aes_sandybridge.inc" />
     <None Include="crypto\asm\cnv2_main_loop_ivybridge.inc" />
     <None Include="crypto\asm\cnv2_main_loop_ryzen.inc" />
   </ItemGroup>

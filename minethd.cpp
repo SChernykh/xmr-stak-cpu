@@ -489,6 +489,7 @@ extern "C"
 	void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
 	void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
 	void cnv1_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
+	void cnv2_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
 }
 
 #ifdef PERFORMANCE_TUNING
@@ -561,6 +562,26 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
 }
 
+void cryptonight_hash_v2_soft_aes_asm(const void* input, size_t len, void* output, cryptonight_ctx* ctx0)
+{
+	keccak((const uint8_t *)input, len, ctx0->hash_state, 200);
+	cn_explode_scratchpad<MEMORY, true>((__m128i*)ctx0->hash_state, (__m128i*)ctx0->long_state);
+
+#ifdef PERFORMANCE_TUNING
+	t1 = __rdtsc();
+#endif
+	ctx0->input = input;
+	ctx0->t_fn = (const uint32_t*)t_fn;
+	cnv2_mainloop_soft_aes_sandybridge_asm(ctx0);
+#ifdef PERFORMANCE_TUNING
+	t2 = __rdtsc();
+#endif
+
+	cn_implode_scratchpad<MEMORY, true>((__m128i*)ctx0->long_state, (__m128i*)ctx0->hash_state);
+	keccakf((uint64_t*)ctx0->hash_state, 24);
+	extra_hashes[ctx0->hash_state[0] & 3](ctx0->hash_state, 200, (char*)output);
+}
+
 void cryptonight_double_hash_v2_asm(const void* input1, size_t len1, void* output1, const void* input2, size_t len2, void* output2, cryptonight_ctx* __restrict ctx0, cryptonight_ctx* __restrict ctx1)
 {
 	keccak((const uint8_t *)input1, len1, ctx0->hash_state, 200);
@@ -603,8 +624,10 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 		{
 			if (variant == 1)
 				return cryptonight_hash_v1_soft_aes_asm;
+			if (variant == 2)
+				return cryptonight_hash_v2_soft_aes_asm;
 		}
-		else if (bHaveAes && (asm_version > 0))
+		else
 		{
 			if (variant == 1)
 			{
@@ -612,15 +635,13 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 			}
 			else if (variant == 2)
 			{
-				switch (asm_version)
-				{
-				case 1:
-					// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
+				// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
+				if (asm_version == 1)
 					return cryptonight_hash_v2_asm<1>;
-				case 2:
-					// AMD Ryzen (1xxx and 2xxx series)
+
+				// AMD Ryzen (1xxx and 2xxx series)
+				if (asm_version == 2)
 					return cryptonight_hash_v2_asm<2>;
-				}
 			}
 		}
 	}

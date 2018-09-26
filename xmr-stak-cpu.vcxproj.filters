@@ -270,6 +270,9 @@
     <None Include="crypto\asm\cnv1_mainloop_soft_aes_sandybridge.inc">
       <Filter>Source Files\asm</Filter>
     </None>
+    <None Include="crypto\asm\cnv2_mainloop_soft_aes_sandybridge.inc">
+      <Filter>Source Files\asm</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="crypto\asm\cn_main_loop.asm">
