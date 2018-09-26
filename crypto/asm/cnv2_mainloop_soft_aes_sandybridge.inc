@@ -1,10 +1,3 @@
-tv900 = 0
-l0$1$ = 8
-ctx0$ = 176
-sqrt_result$1$ = 184
-ah0$1$ = 192
-idx1$2$ = 200
-
 	mov	QWORD PTR [rsp+8], rcx
 	push	rbx
 	push	rbp
@@ -14,7 +7,7 @@ idx1$2$ = 200
 	push	r13
 	push	r14
 	push	r15
-	sub	rsp, 104
+	sub	rsp, 152
 
 	stmxcsr DWORD PTR [rsp+4]
 	mov DWORD PTR [rsp], 24448
@@ -36,9 +29,16 @@ idx1$2$ = 200
 	mov	rax, QWORD PTR [r10+80]
 	movq	xmm0, rdx
 	xor	rax, QWORD PTR [r10+64]
-	movaps	XMMWORD PTR [rsp+80], xmm6
-	movaps	XMMWORD PTR [rsp+64], xmm7
+
+	movaps	XMMWORD PTR [rsp+16], xmm6
+	movaps	XMMWORD PTR [rsp+32], xmm7
 	movaps	XMMWORD PTR [rsp+48], xmm8
+	movaps	XMMWORD PTR [rsp+64], xmm9
+	movaps	XMMWORD PTR [rsp+80], xmm10
+	movaps	XMMWORD PTR [rsp+96], xmm11
+	movaps	XMMWORD PTR [rsp+112], xmm12
+	movaps	XMMWORD PTR [rsp+128], xmm13
+
 	movq	xmm5, rax
 
 	mov ax, 1023
@@ -46,23 +46,22 @@ idx1$2$ = 200
 	movq xmm8, rax
 
 	mov	rax, r8
-	movaps	XMMWORD PTR [rsp+32], xmm9
 	punpcklqdq xmm4, xmm0
-	movaps	XMMWORD PTR [rsp+16], xmm10
 	and	eax, 2097136
 	movq	xmm10, QWORD PTR [r10+96]
 	movq	xmm0, rcx
 	mov	rcx, QWORD PTR [r10+104]
 	xorps	xmm9, xmm9
-	mov	QWORD PTR idx1$2$[rsp], rax
-	mov	QWORD PTR l0$1$[rsp], r11
-	mov	QWORD PTR ah0$1$[rsp], r9
+	mov	QWORD PTR [rsp+248], rax
+	movq	xmm12, r11
+	mov	QWORD PTR [rsp+240], r9
 	punpcklqdq xmm5, xmm0
-	mov	QWORD PTR sqrt_result$1$[rsp], rcx
-	mov	DWORD PTR tv900[rsp], 524288
+	movq xmm13, rcx
+	mov r12d, 524288
 
 	ALIGN 64
 cnv2_mainloop_soft_aes_sandybridge:
+	movd xmm11, r12d
 	mov	r12, QWORD PTR [r10+272]
 	lea	r13, QWORD PTR [rax+r11]
 	mov	esi, DWORD PTR [r13]
@@ -71,7 +70,7 @@ cnv2_mainloop_soft_aes_sandybridge:
 	movq	xmm7, r8
 	mov	ebp, DWORD PTR [r13+12]
 	mov	r14d, DWORD PTR [r13+8]
-	mov	rdx, QWORD PTR idx1$2$[rsp]
+	mov	rdx, QWORD PTR [rsp+248]
 	movzx	ecx, sil
 	shr	esi, 8
 	punpcklqdq xmm7, xmm0
@@ -117,7 +116,7 @@ cnv2_mainloop_soft_aes_sandybridge:
 	shr	ebp, 8
 	movd	xmm1, r11d
 	add	ebp, 256
-	mov	r11, QWORD PTR l0$1$[rsp]
+	movq	r11, xmm12
 	mov	r9d, DWORD PTR [r12+rcx*4]
 	xor	r9d, DWORD PTR [r12+rsi*4]
 	mov	eax, DWORD PTR [r12+rbp*4]
@@ -144,10 +143,12 @@ cnv2_mainloop_soft_aes_sandybridge:
 	paddq	xmm0, xmm5
 	movdqu	XMMWORD PTR [rcx+r11], xmm0
 	movdqu	XMMWORD PTR [rax+r11], xmm2
-	mov	rcx, QWORD PTR sqrt_result$1$[rsp]
+	movq rcx, xmm13
 	paddq	xmm1, xmm7
 	movdqu	XMMWORD PTR [rdx+r11], xmm1
 	movq	rdi, xmm6
+	mov	r10, rdi
+	and	r10d, 2097136
 	xor	edx, edx
 	mov	rax, rcx
 	shl	rax, 32
@@ -163,13 +164,10 @@ cnv2_mainloop_soft_aes_sandybridge:
 	movdqa	xmm0, xmm6
 	movaps	xmm1, xmm9
 	psrldq	xmm0, 8
-	mov	r10, rdi
 	movq	rax, xmm0
-	and	r10d, 2097136
 	xor	rbx, QWORD PTR [r10+r11]
 	lea	r14, QWORD PTR [r10+r11]
-	mov	rbp, QWORD PTR [r11+r10+8]
-	lea	rsi, QWORD PTR [r11+r10]
+	mov	rbp, QWORD PTR [r14+8]
 	div	r9
 	shl	rdx, 32
 	mov	eax, eax
@@ -184,11 +182,11 @@ cnv2_mainloop_soft_aes_sandybridge:
 	movq	rdx, xmm1
 	test	rdx, 524287
 	je	sqrt_fixup_soft_aes_sandybridge
-	shr	rdx, 19
+	psrlq xmm1, 19
 sqrt_fixup_soft_aes_sandybridge_ret:
 
 	mov	r9, r10
-	mov	QWORD PTR sqrt_result$1$[rsp], rdx
+	movdqa	xmm13, xmm1
 	xor	r9, 16
 	mov	rcx, r10
 	xor	rcx, 32
@@ -210,30 +208,35 @@ sqrt_fixup_soft_aes_sandybridge_ret:
 	paddq	xmm2, xmm4
 	movdqu	XMMWORD PTR [r9+r11], xmm0
 	movdqa	xmm5, xmm4
-	mov	r9, QWORD PTR ah0$1$[rsp]
+	mov	r9, QWORD PTR [rsp+240]
 	movdqa	xmm4, xmm6
 	add	r9, rax
 	movdqu	XMMWORD PTR [rcx+r11], xmm2
 	movdqu	XMMWORD PTR [r10+r11], xmm1
-	mov	r10, QWORD PTR ctx0$[rsp]
+	mov	r10, QWORD PTR [rsp+224]
+	movd r12d, xmm11
 	mov	QWORD PTR [r14], r8
 	xor	r8, rbx
 	mov	rax, r8
-	mov	QWORD PTR [rsi+8], r9
+	mov	QWORD PTR [r14+8], r9
 	and	eax, 2097136
 	xor	r9, rbp
-	sub	DWORD PTR tv900[rsp], 1
-	mov	QWORD PTR ah0$1$[rsp], r9
-	mov	QWORD PTR idx1$2$[rsp], rax
+	mov	QWORD PTR [rsp+240], r9
+	mov	QWORD PTR [rsp+248], rax
+	sub	r12d, 1
 	jne	cnv2_mainloop_soft_aes_sandybridge
 
 	ldmxcsr DWORD PTR [rsp+4]
-	movaps	xmm6, XMMWORD PTR [rsp+80]
-	movaps	xmm7, XMMWORD PTR [rsp+64]
+	movaps	xmm6, XMMWORD PTR [rsp+16]
+	movaps	xmm7, XMMWORD PTR [rsp+32]
 	movaps	xmm8, XMMWORD PTR [rsp+48]
-	movaps	xmm9, XMMWORD PTR [rsp+32]
-	movaps	xmm10, XMMWORD PTR [rsp+16]
-	add	rsp, 104
+	movaps	xmm9, XMMWORD PTR [rsp+64]
+	movaps	xmm10, XMMWORD PTR [rsp+80]
+	movaps	xmm11, XMMWORD PTR [rsp+96]
+	movaps	xmm12, XMMWORD PTR [rsp+112]
+	movaps	xmm13, XMMWORD PTR [rsp+128]
+
+	add	rsp, 152
 	pop	r15
 	pop	r14
 	pop	r13
@@ -258,6 +261,7 @@ sqrt_fixup_soft_aes_sandybridge:
 	imul	rcx, rax
 	sub	rcx, r9
 	adc	rdx, 0
+	movq xmm1, rdx
 	jmp	sqrt_fixup_soft_aes_sandybridge_ret
 
 cnv2_mainloop_soft_aes_sandybridge_asm_endp:
