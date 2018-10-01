@@ -81,6 +81,9 @@ RX580 8GB+RX480 4GB+RX570 4GB+RX470 4GB|3530 H/s|3350 H/s|94.9%
 4x Xeon E7-8837|1624 H/s|1525 H/s|93.9%
 Intel Core i7 2600k|287.5 H/s|267.9 H/s|91.9%
 Intel Core i5 3210M (1 thread)|74.3 H/s|68.3 H/s|91.9%
+GTX 1050|325 H/s|290.8 H/s|89.5%
+GTX 1060 6 GB|520 H/s|459.3 H/s|88.3%
+GTX 970|480 H/s|383 H/s|79.8%
 
 
 Overall, it seems that all CPU/GPU hardware will get a minimal performance hit.
