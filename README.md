@@ -84,7 +84,7 @@ Intel Core i5 3210M (1 thread)|74.3 H/s|68.3 H/s|91.9%
 GTX 1060 6 GB (CUDA 10, 411.63 driver)|508 H/s|461.5 H/s|90.8%
 GTX 1050|325 H/s|290.8 H/s|89.5%
 GTX 1060 6 GB (CUDA 9.2, 397.64 driver)|520 H/s|459.3 H/s|88.3%
-GTX 970|480 H/s|383 H/s|79.8%
+GTX 970|480 H/s|393 H/s|81.9%
 
 
 Overall, it seems that all CPU/GPU hardware will get a minimal performance hit.
