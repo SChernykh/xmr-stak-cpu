@@ -38,9 +38,6 @@
 	and	 r10d, 2097136
 	movq	 xmm5, rax
 
-	xor eax, eax
-	mov QWORD PTR [rsp+16], rax
-
 	mov ax, 1023
 	shl rax, 52
 	movq xmm8, rax
@@ -106,7 +103,6 @@ $main_loop_ivybridge:
 	movq	 xmm0, rax
 	paddq	 xmm0, xmm8
 	sqrtsd	 xmm3, xmm0
-	psubq	 xmm3, XMMWORD PTR [rsp+16]
 	movq	 rdx, xmm3
 	test	 edx, 524287
 	je	 $sqrt_fixup_ivybridge
