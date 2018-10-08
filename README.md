@@ -80,6 +80,7 @@ AMD Radeon RX 560|466.2 H/s|461.8 H/s|99.05%
 2x Xeon E5-2699 v4|1923.7 H/s|1846.0 H/s|95.96%
 RX580 8GB+RX480 4GB+RX570 4GB+RX470 4GB|3530 H/s|3350 H/s|94.9%
 4x Xeon E7-8837|1624 H/s|1525 H/s|93.9%
+Radeon RX 550|528 H/s|494 H/s|93.56%
 Intel Core i7 2600k|287.5 H/s|267.9 H/s|91.9%
 Intel Core i5 3210M (1 thread)|74.3 H/s|68.3 H/s|91.9%
 GTX 1060 6 GB (CUDA 10, 411.63 driver)|508 H/s|461.5 H/s|90.8%
