@@ -69,6 +69,7 @@ Source:
 - https://github.com/fireice-uk/xmr-stak/issues/1851 and https://github.com/fireice-uk/xmr-stak/pull/1850 for most of this table
 - https://github.com/monero-project/monero/pull/4404#issuecomment-424084477 for Intel Core i7 7700
 - https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-425674350 for Vega 56 rig
+- https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-428365815 for Vega 64 rig
 
 Hardware|CNv1 hashrate|CNv2 hashrate|Performance
 -----------|------|----|-------
@@ -78,6 +79,7 @@ AMD Ryzen 5 2600|630.6 H/s|627.3 H/s|99.5%
 AMD Radeon RX 560|466.2 H/s|461.8 H/s|99.05%
 4x Vega 56 (Cast XMR 1.5.0)|7585 H/s|7331 H/s|96.65%
 2x Xeon E5-2699 v4|1923.7 H/s|1846.0 H/s|95.96%
+6x Vega 64 (SRBMiner 1.6.8)|2145 H/s|2049 H/s|95.52%
 RX580 8GB+RX480 4GB+RX570 4GB+RX470 4GB|3530 H/s|3350 H/s|94.9%
 4x Xeon E7-8837|1624 H/s|1525 H/s|93.9%
 Radeon RX 550|528 H/s|494 H/s|93.56%
