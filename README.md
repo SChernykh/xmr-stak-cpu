@@ -67,6 +67,7 @@ The following table summarizes performance level for different hardware, relativ
 Source:
 
 - https://github.com/fireice-uk/xmr-stak/issues/1851 and https://github.com/fireice-uk/xmr-stak/pull/1850 for most of this table
+- https://github.com/xmrig/xmrig/issues/753#issuecomment-428673504 and further posts for NVIDIA cards
 - https://github.com/monero-project/monero/pull/4404#issuecomment-424084477 for Intel Core i7 7700
 - https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-425674350 for Vega 56 rig
 - https://github.com/SChernykh/xmr-stak-cpu/issues/1#issuecomment-428365815 for Vega 64 rig
@@ -77,6 +78,7 @@ Intel Core i7 7700|302 H/s|305 H/s|101.0%
 Intel Core i5 3210M (2 threads)|73.6 H/s|74.2 H/s|100.8%
 AMD Ryzen 5 2600|630.6 H/s|627.3 H/s|99.5%
 AMD Radeon RX 560|466.2 H/s|461.8 H/s|99.05%
+GTX1060 6GB|520 H/s|512 H/s|98.46%
 GTX 1050|325 H/s|318 H/s|97.8%
 4x Vega 56 (Cast XMR 1.5.0)|7585 H/s|7331 H/s|96.65%
 2x Xeon E5-2699 v4|1923.7 H/s|1846.0 H/s|95.96%
