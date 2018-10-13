@@ -89,6 +89,7 @@ GTX 970|483 H/s|455 H/s|94.2%
 Radeon RX 550|528 H/s|494 H/s|93.56%
 Intel Core i7 2600k|287.5 H/s|267.9 H/s|91.9%
 Intel Core i5 3210M (1 thread)|74.3 H/s|68.3 H/s|91.9%
+8x Nvidia GTX 750 1GB|1883.8 H/s|1713.2 H/s|90.94%
 Radeon R7 370|418.1 H/s|328.6 H/s|78.6%
 
 Overall, it seems that all CPU/GPU hardware will get a minimal performance hit.
