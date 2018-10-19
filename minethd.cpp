@@ -346,7 +346,7 @@ bool minethd::self_test()
 
 			if (i > 0)
 			{
-				for (int j = 1; j <= 2; ++j)
+				for (int j = 1; j <= 3; ++j)
 				{
 					char hash[32];
 					cn_hash_fun hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), i, j);
@@ -487,6 +487,7 @@ extern "C"
 	void cnv1_mainloop_sandybridge_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
+	void cnv2_mainloop_bulldozer_asm(cryptonight_ctx* ctx0, const uint32_t* sqrt_lut);
 	void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
 	void cnv1_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
@@ -551,8 +552,10 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 #endif
 	if (asm_version == 1)
 		cnv2_mainloop_ivybridge_asm(ctx0);
-	else
+	else if (asm_version == 2)
 		cnv2_mainloop_ryzen_asm(ctx0);
+	else
+		cnv2_mainloop_bulldozer_asm(ctx0, SqrtV2Table);
 #ifdef PERFORMANCE_TUNING
 	t2 = __rdtsc();
 #endif
@@ -642,6 +645,10 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 				// AMD Ryzen (1xxx and 2xxx series)
 				if (asm_version == 2)
 					return cryptonight_hash_v2_asm<2>;
+
+				// AMD Bulldozer
+				if (asm_version == 3)
+					return cryptonight_hash_v2_asm<3>;
 			}
 		}
 	}

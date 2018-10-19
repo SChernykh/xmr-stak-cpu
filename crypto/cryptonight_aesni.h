@@ -16,6 +16,7 @@
 #pragma once
 
 #include "cryptonight.h"
+#include "fast_sqrt_v2.h"
 #include <memory.h>
 #include <stdio.h>
 #include <float.h>
