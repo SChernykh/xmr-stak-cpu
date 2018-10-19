@@ -26,12 +26,6 @@
 #define UNLIKELY(X) __builtin_expect(X, 0)
 #define FORCEINLINE __attribute__((always_inline)) inline
 #define NOINLINE __attribute__((noinline))
-static FORCEINLINE unsigned long long __rdtsc(void)
-{
-	unsigned hi, lo;
-	__asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
-	return ((unsigned long long)lo) | (((unsigned long long)hi) << 32);
-}
 #else
 #define LIKELY(X) X
 #define UNLIKELY(X) X

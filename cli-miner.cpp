@@ -48,6 +48,8 @@
 #include <openssl/err.h>
 #endif
 
+#include "crypto/cryptonight_aesni.h"
+
 //Do a press any key for the windows folk. *insert any key joke here*
 #ifdef _WIN32
 void win_exit()
