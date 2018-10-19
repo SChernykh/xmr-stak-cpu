@@ -95,19 +95,19 @@ extern uint64_t min_cycles;
 void do_benchmark()
 {
 	int benchmark_time = 60;
+	using namespace std::chrono;
 
 #ifdef PERFORMANCE_TUNING
-	LARGE_INTEGER f, t1, t2;
-	QueryPerformanceFrequency(&f);
-	QueryPerformanceCounter(&t1);
+	uint64_t t1, t2;
+	t1 = time_point_cast<nanoseconds>(high_resolution_clock::now()).time_since_epoch().count();
 	uint64_t tsc1 = __rdtsc();
 	uint64_t tsc2;
 	do
 	{
-		QueryPerformanceCounter(&t2);
+		t2 = time_point_cast<nanoseconds>(high_resolution_clock::now()).time_since_epoch().count();
 		tsc2 = __rdtsc();
-	} while (t2.QuadPart - t1.QuadPart < f.QuadPart);
-	double rdtsc_speed = static_cast<double>(tsc2 - tsc1) / 1e9 / (t2.QuadPart - t1.QuadPart) * f.QuadPart;
+	} while (t2 - t1 < 1000000000);
+	double rdtsc_speed = static_cast<double>(tsc2 - tsc1) / (t2 - t1);
 	printer::inst()->print_msg(L0, "rdtsc speed: %.3f GHz", rdtsc_speed);
 	benchmark_time = 10;
 	min_cycles = uint64_t(-1);
