@@ -104,15 +104,14 @@ L43:
         mov     ecx, DWORD PTR 4[rdx]
         and     rbx, QWORD PTR [rdx]
         and     eax, 268435455
-        movzx   edx, WORD PTR 6[rdx]
+        mov   edx, ecx
         sub     rax, 134217728
         shr     ecx, 1
         and     ecx, 4194303
         sal     rbx, 28
         imul    rcx, rax
-        shr     dx, 7
+        shr     edx, 23
         imul    rax, rax
-        movzx   edx, dx
         add     rcx, rbx
         imul    rax, rdx
         shr     rax, 28
@@ -157,12 +156,11 @@ L43:
         add     rdx, rbx
         add     rbx, rcx
         imul    rcx, rbx
-        sub     r8, rdx
+        add rdx, rcx
         movaps  XMMWORD PTR [r12], xmm3
         movaps  XMMWORD PTR [r10], xmm1
-        sub     r8, rcx
-        sar     r8, 63
-        add     r13, r8
+        cmp     r8, rdx
+        sbb     r13, 0
         mov     rax, QWORD PTR [rsp]
         mov     QWORD PTR 0[rbp], r9
         xor     r9, rsi
