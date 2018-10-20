@@ -48,9 +48,8 @@
 	ALIGN 64
 $main_loop_bulldozer:
 	movdqa	xmm5, XMMWORD PTR [r10+rbx]
-	movq	xmm0, r11
-	movq	xmm6, r8
-	punpcklqdq xmm6, xmm0
+	movq xmm6, r8
+	pinsrq xmm6, r11, 1
 	lea	rdx, QWORD PTR [r10+rbx]
 	lea	r9, QWORD PTR [rdi+rdi]
 	shl	rdi, 32
@@ -79,10 +78,9 @@ $main_loop_bulldozer:
 	shl rdi, 52
 
 	movq	r14, xmm5
+	pextrq rax, xmm5, 1
+
 	movdqa	xmm0, xmm5
-	movdqa	xmm1, xmm5
-	psrldq	xmm1, 8
-	movq	rax, xmm1
 	pxor	xmm0, xmm3
 	mov	r10, r14
 	and	r10d, 2097136
