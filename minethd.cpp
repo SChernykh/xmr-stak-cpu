@@ -648,23 +648,23 @@ minethd::cn_hash_fun minethd::func_selector(bool bHaveAes, int variant, int asm_
 				// AMD Bulldozer
 				if (asm_version == 3)
 					return cryptonight_hash_v2_asm<3>;
-				if (asm_version == 4)
-					return cryptonight_hash_v2_asm<4>;
 			}
 		}
 	}
 
-	static const cn_hash_fun func_table[6] = {
+	static const cn_hash_fun func_table[8] = {
 		cryptonight_hash<0x80000, MEMORY, false, 0>,
 		cryptonight_hash<0x80000, MEMORY, false, 1>,
 		cryptonight_hash<0x80000, MEMORY, false, 2>,
+		cryptonight_hash<0x80000, MEMORY, false, 3>,
 
 		cryptonight_hash<0x80000, MEMORY, true, 0>,
 		cryptonight_hash<0x80000, MEMORY, true, 1>,
 		cryptonight_hash<0x80000, MEMORY, true, 2>,
+		cryptonight_hash<0x80000, MEMORY, true, 3>,
 	};
 
-	return func_table[variant + (bHaveAes ? 0 : 3)];
+	return func_table[variant + (bHaveAes ? 0 : 4)];
 }
 
 void minethd::pin_thd_affinity()
@@ -749,17 +749,19 @@ minethd::cn_hash_fun_dbl minethd::func_dbl_selector(bool bHaveAes, int variant, 
 		return cryptonight_double_hash_v2_asm;
 	}
 
-	static const cn_hash_fun_dbl func_table[6] = {
+	static const cn_hash_fun_dbl func_table[8] = {
 		cryptonight_double_hash<0x80000, MEMORY, false, 0>,
 		cryptonight_double_hash<0x80000, MEMORY, false, 1>,
 		cryptonight_double_hash<0x80000, MEMORY, false, 2>,
+		cryptonight_double_hash<0x80000, MEMORY, false, 3>,
 
 		cryptonight_double_hash<0x80000, MEMORY, true, 0>,
 		cryptonight_double_hash<0x80000, MEMORY, true, 1>,
 		cryptonight_double_hash<0x80000, MEMORY, true, 2>,
+		cryptonight_double_hash<0x80000, MEMORY, true, 3>,
 	};
 
-	return func_table[variant + (bHaveAes ? 0 : 3)];
+	return func_table[variant + (bHaveAes ? 0 : 4)];
 }
 
 void minethd::double_work_main()
