@@ -20,25 +20,13 @@
     <ClCompile Include="console.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="executor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="httpd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="jconf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="jpsock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="minethd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="socket.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="webdesign.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="crypto\cryptonight_common.cpp">
@@ -70,9 +58,6 @@
     <ClInclude Include="donate-level.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="executor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="httpd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -82,25 +67,16 @@
     <ClInclude Include="jext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="jpsock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="minethd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="msgstruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="socket.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="socks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="version.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="webdesign.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="autoAdjust.hpp">

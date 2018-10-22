@@ -104,7 +104,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>CONF_NO_HWLOC;CONF_NO_HTTPD;CONF_NO_TLS;PGO_BUILD</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CONF_NO_HWLOC;CONF_NO_HTTPD;CONF_NO_TLS;PERFORMANCE_TUNING</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -113,17 +113,13 @@
       <ControlFlowGuard>false</ControlFlowGuard>
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
+    <Link />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>CONF_NO_HWLOC;CONF_NO_HTTPD;CONF_NO_TLS;PGO_BUILD</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CONF_NO_HWLOC;CONF_NO_HTTPD;CONF_NO_TLS;PERFORMANCE_TUNING</PreprocessorDefinitions>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
+    <Link />
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cli-miner.cpp" />
@@ -137,13 +133,9 @@
     <ClCompile Include="crypto\soft_aes.c">
       <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AssemblyAndMachineCode</AssemblerOutput>
     </ClCompile>
-    <ClCompile Include="executor.cpp" />
     <ClCompile Include="httpd.cpp" />
     <ClCompile Include="jconf.cpp" />
-    <ClCompile Include="jpsock.cpp" />
     <ClCompile Include="minethd.cpp" />
-    <ClCompile Include="socket.cpp" />
-    <ClCompile Include="webdesign.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="autoAdjust.hpp" />
@@ -161,12 +153,10 @@
     <ClInclude Include="crypto\int-util.h" />
     <ClInclude Include="crypto\skein_port.h" />
     <ClInclude Include="donate-level.h" />
-    <ClInclude Include="executor.h" />
     <ClInclude Include="httpd.h" />
     <ClInclude Include="hwlocMemory.hpp" />
     <ClInclude Include="jconf.h" />
     <ClInclude Include="jext.h" />
-    <ClInclude Include="jpsock.h" />
     <ClInclude Include="minethd.h" />
     <ClInclude Include="msgstruct.h" />
     <ClInclude Include="rapidjson\allocators.h" />
@@ -204,11 +194,9 @@
     <ClInclude Include="rapidjson\stream.h" />
     <ClInclude Include="rapidjson\stringbuffer.h" />
     <ClInclude Include="rapidjson\writer.h" />
-    <ClInclude Include="socket.h" />
     <ClInclude Include="socks.h" />
     <ClInclude Include="thdq.hpp" />
     <ClInclude Include="version.h" />
-    <ClInclude Include="webdesign.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="crypto\asm\cn_main_loop.asm" />

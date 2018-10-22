@@ -21,7 +21,6 @@
   *
   */
 
-#include "executor.h"
 #include "minethd.h"
 #include "jconf.h"
 #include "console.h"

@@ -3,7 +3,6 @@ PUBLIC cnv1_mainloop_sandybridge_asm
 PUBLIC cnv2_mainloop_ivybridge_asm
 PUBLIC cnv2_mainloop_ryzen_asm
 PUBLIC cnv2_mainloop_bulldozer_asm
-PUBLIC cnv2_mainloop_bulldozer_2_asm
 PUBLIC cnv2_double_mainloop_sandybridge_asm
 
 PUBLIC cnv1_mainloop_soft_aes_sandybridge_asm
@@ -32,12 +31,6 @@ cnv2_mainloop_bulldozer_asm PROC
 	INCLUDE cnv2_main_loop_bulldozer.inc
 	ret 0
 cnv2_mainloop_bulldozer_asm ENDP
-
-ALIGN 64
-cnv2_mainloop_bulldozer_2_asm PROC
-	INCLUDE cnv2_main_loop_bulldozer_2.inc
-	ret 0
-cnv2_mainloop_bulldozer_2_asm ENDP
 
 ALIGN 64
 cnv2_double_mainloop_sandybridge_asm PROC

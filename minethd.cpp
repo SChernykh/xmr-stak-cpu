@@ -70,7 +70,6 @@ void thd_setaffinity(std::thread::native_handle_type h, uint64_t cpu_id)
 }
 #endif // _WIN32
 
-#include "executor.h"
 #include "minethd.h"
 #include "jconf.h"
 #include "crypto/cryptonight_aesni.h"
@@ -488,7 +487,6 @@ extern "C"
 	void cnv2_mainloop_ivybridge_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_ryzen_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_bulldozer_asm(cryptonight_ctx* ctx0, const uint32_t* sqrt_lut);
-	void cnv2_mainloop_bulldozer_2_asm(cryptonight_ctx* ctx0, const uint32_t* sqrt_lut);
 	void cnv2_double_mainloop_sandybridge_asm(cryptonight_ctx* ctx0, cryptonight_ctx* ctx1);
 	void cnv1_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
 	void cnv2_mainloop_soft_aes_sandybridge_asm(cryptonight_ctx* ctx0);
@@ -555,10 +553,8 @@ void cryptonight_hash_v2_asm(const void* input, size_t len, void* output, crypto
 		cnv2_mainloop_ivybridge_asm(ctx0);
 	else if (asm_version == 2)
 		cnv2_mainloop_ryzen_asm(ctx0);
-	else if (asm_version == 3)
-		cnv2_mainloop_bulldozer_asm(ctx0, SqrtV2Table);
 	else
-		cnv2_mainloop_bulldozer_2_asm(ctx0, SqrtV2Table);
+		cnv2_mainloop_bulldozer_asm(ctx0, SqrtV2Table);
 #ifdef PERFORMANCE_TUNING
 	t2 = __rdtsc();
 #endif
@@ -691,14 +687,12 @@ void minethd::work_main()
 	cn_hash_fun hash_fun;
 	cryptonight_ctx* ctx;
 	uint64_t iCount = 0;
-	uint64_t* piHashVal;
 	uint32_t* piNonce;
-	job_result result;
+	uint8_t bHashOut[32];
 
 	hash_fun = func_selector(jconf::inst()->HaveHardwareAes(), iVariant, iAsmVersion);
 	ctx = minethd_alloc_ctx();
 
-	piHashVal = (uint64_t*)(result.bResult + 24);
 	piNonce = (uint32_t*)(oWork.bWorkBlob + 39);
 	iConsumeCnt++;
 
@@ -717,14 +711,6 @@ void minethd::work_main()
 			continue;
 		}
 
-		if(oWork.bNiceHash)
-			result.iNonce = calc_nicehash_nonce(*piNonce, oWork.iResumeCnt);
-		else
-			result.iNonce = calc_start_nonce(oWork.iResumeCnt);
-
-		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
-		memcpy(result.sJobID, oWork.sJobID, sizeof(job_result::sJobID));
-
 		while(iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
 			if ((iCount & 0xF) == 0) //Store stats every 16 hashes
@@ -736,20 +722,13 @@ void minethd::work_main()
 			}
 			iCount++;
 
-			*piNonce = ++result.iNonce;
-
-			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, result.bResult, ctx);
+			hash_fun(oWork.bWorkBlob, oWork.iWorkSize, bHashOut, ctx);
 #ifdef PERFORMANCE_TUNING
 			if (t2 - t1 < min_cycles)
 			{
 				min_cycles = t2 - t1;
 			}
 #endif
-
-			if (*piHashVal < oWork.iTarget)
-				executor::inst()->push_event(ex_event(result, oWork.iPoolId));
-
-			std::this_thread::yield();
 		}
 
 		consume_work();
@@ -797,7 +776,6 @@ void minethd::double_work_main()
 	uint8_t bDoubleHashOut[64];
 	uint8_t	bDoubleWorkBlob[sizeof(miner_work::bWorkBlob) * 2];
 	uint32_t iNonce;
-	job_result res;
 
 	hash_fun = func_dbl_selector(jconf::inst()->HaveHardwareAes(), iVariant, iAsmVersion);
 	ctx0 = minethd_alloc_ctx();
@@ -833,8 +811,6 @@ void minethd::double_work_main()
 		else
 			iNonce = calc_start_nonce(oWork.iResumeCnt);
 
-		assert(sizeof(job_result::sJobID) == sizeof(pool_job::sJobID));
-
 		while (iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
 			if ((iCount & 0x7) == 0) //Store stats every 16 hashes
@@ -857,14 +833,6 @@ void minethd::double_work_main()
 				min_cycles = t2 - t1;
 			}
 #endif
-
-			if (*piHashVal0 < oWork.iTarget)
-				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce-1, bDoubleHashOut), oWork.iPoolId));
-
-			if (*piHashVal1 < oWork.iTarget)
-				executor::inst()->push_event(ex_event(job_result(oWork.sJobID, iNonce, bDoubleHashOut + 32), oWork.iPoolId));
-
-			std::this_thread::yield();
 		}
 
 		consume_work();

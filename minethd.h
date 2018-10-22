@@ -1,6 +1,8 @@
 #pragma once
 #include <thread>
 #include <atomic>
+#include <assert.h>
+#include <vector>
 #include "crypto/cryptonight.h"
 
 class telemetry
